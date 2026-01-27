@@ -2,7 +2,6 @@ import { useMemo } from 'react'
 import { useIssues } from '@/hooks/useIssues'
 import { useProjects } from '@/hooks/useProjects'
 import { useStore } from '@/stores/useStore'
-import { useSettingsStore } from '@/stores/useSettingsStore'
 import { ProjectIcon } from '@/lib/project-icons'
 import { cn, formatRelativeDate } from '@/lib/utils'
 import { 
@@ -19,7 +18,6 @@ export function HomeView() {
   const { data: issuesData, isLoading } = useIssues({})
   const { data: projectsData } = useProjects()
   const { setActiveIssueId, setCurrentProjectId, setViewMode } = useStore()
-  const { homeBackground } = useSettingsStore()
 
   const issues = issuesData?.data || []
   const projects = projectsData?.data || []
@@ -63,18 +61,7 @@ export function HomeView() {
   }
 
   return (
-    <div className="relative min-h-full">
-      {/* Background Image */}
-      {homeBackground && (
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(${homeBackground})` }}
-        >
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
-        </div>
-      )}
-      
-      <div className="relative p-6 space-y-8 max-w-5xl mx-auto">
+    <div className="p-6 space-y-8 max-w-5xl mx-auto">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold">Welcome back</h1>
@@ -184,7 +171,6 @@ export function HomeView() {
           </div>
         </div>
       )}
-      </div>
     </div>
   )
 }

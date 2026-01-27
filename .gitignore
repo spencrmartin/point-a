@@ -40,3 +40,7 @@ coverage/
 # Misc
 *.tgz
 .cache/
+.api.pid
+.web.pid
+api.log
+web.log

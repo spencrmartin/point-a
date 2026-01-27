@@ -12,6 +12,7 @@ import { Settings } from './components/Settings'
 import { useStore } from './stores/useStore'
 import { useSettingsStore } from './stores/useSettingsStore'
 import { useEffect } from 'react'
+import { cn } from './lib/utils'
 
 // Configure QueryClient with aggressive caching for snappy UI
 const queryClient = new QueryClient({
@@ -102,19 +103,40 @@ function AppContent() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [shortcutsEnabled, setQuickCreateOpen, setSettingsOpen, setViewMode])
 
+  const { homeBackground } = useSettingsStore()
+
   return (
-    <div className="h-screen flex bg-background">
-      <Sidebar />
+    <div className="h-screen p-3 relative">
+      {/* Global Background */}
+      {homeBackground ? (
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${homeBackground})` }}
+        />
+      ) : (
+        <div className="absolute inset-0 bg-background" />
+      )}
       
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
+      {/* Panels Container */}
+      <div className="relative h-full flex gap-3">
+        {/* Sidebar Panel */}
+        <Sidebar />
         
-        <main className="flex-1 overflow-auto">
-          {viewMode === 'home' && <HomeView />}
-          {viewMode === 'board' && <div className="p-4 h-full"><BoardView /></div>}
-          {viewMode === 'list' && <div className="p-4 h-full"><ListView /></div>}
-          {viewMode === 'timeline' && <div className="p-4 h-full"><TimelineView /></div>}
-        </main>
+        {/* Right Side (Header + Content stacked) */}
+        <div className="flex-1 flex flex-col gap-3 min-w-0">
+          {/* Header Panel */}
+          <div className="rounded-2xl border bg-card/80 backdrop-blur-sm shadow-sm">
+            <Header />
+          </div>
+          
+          {/* Content Panel */}
+          <main className="flex-1 rounded-2xl border bg-card/80 backdrop-blur-sm shadow-sm overflow-auto">
+            {viewMode === 'home' && <HomeView />}
+            {viewMode === 'board' && <div className="p-4 h-full"><BoardView /></div>}
+            {viewMode === 'list' && <div className="p-4 h-full"><ListView /></div>}
+            {viewMode === 'timeline' && <div className="p-4 h-full"><TimelineView /></div>}
+          </main>
+        </div>
       </div>
 
       <QuickCreateModal />

@@ -26,7 +26,7 @@ export function Header() {
   const isHome = viewMode === 'home'
 
   return (
-    <header className="h-14 border-b bg-card px-4 flex items-center justify-between">
+    <header className="h-14 px-4 flex items-center justify-between">
       {/* Left: Project info */}
       <div className="flex items-center gap-3">
         {isHome ? (
@@ -87,9 +87,8 @@ export function Header() {
             <DisplayPopover />
           </>
         )}
-        <Button size="sm" onClick={() => setQuickCreateOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Issue
+        <Button size="icon" onClick={() => setQuickCreateOpen(true)}>
+          <Plus className="h-5 w-5" />
         </Button>
       </div>
     </header>

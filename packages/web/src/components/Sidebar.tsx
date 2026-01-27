@@ -22,20 +22,18 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        'h-full bg-card border-r flex flex-col transition-all duration-300',
+        'h-full bg-card/80 backdrop-blur-sm rounded-2xl border shadow-sm flex flex-col transition-all duration-300 overflow-hidden',
         sidebarOpen ? 'w-64' : 'w-16'
       )}
     >
       {/* Header */}
       <div className="p-4 flex items-center justify-between border-b">
-        {sidebarOpen ? (
-          <div className="flex items-center gap-3">
-            <PointALogo size={32} />
-            <span className="font-semibold">Point A</span>
-          </div>
-        ) : (
-          <PointALogo size={28} className="mx-auto" />
-        )}
+        <button
+          onClick={toggleSidebar}
+          className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+        >
+          <PointALogo size={sidebarOpen ? 32 : 28} className={!sidebarOpen ? 'mx-auto' : ''} />
+        </button>
         {sidebarOpen && (
           <Button
             variant="ghost"
