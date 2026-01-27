@@ -6,6 +6,7 @@ import { BoardView } from './components/BoardView'
 import { ListView } from './components/ListView'
 import { TimelineView } from './components/TimelineView'
 import { QuickCreateModal } from './components/QuickCreateModal'
+import { CreateProjectModal } from './components/CreateProjectModal'
 import { Settings } from './components/Settings'
 import { useStore } from './stores/useStore'
 import { useSettingsStore } from './stores/useSettingsStore'
@@ -115,6 +116,7 @@ function AppContent() {
       </div>
 
       <QuickCreateModal />
+      <CreateProjectModal />
       <Settings open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <Toaster position="bottom-right" />
     </div>

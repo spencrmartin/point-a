@@ -31,6 +31,10 @@ interface AppState {
   // Settings modal
   settingsOpen: boolean
   setSettingsOpen: (open: boolean) => void
+
+  // Create project modal
+  createProjectOpen: boolean
+  setCreateProjectOpen: (open: boolean) => void
 }
 
 export const useStore = create<AppState>((set) => ({
@@ -70,4 +74,7 @@ export const useStore = create<AppState>((set) => ({
 
   settingsOpen: false,
   setSettingsOpen: (open) => set({ settingsOpen: open }),
+
+  createProjectOpen: false,
+  setCreateProjectOpen: (open) => set({ createProjectOpen: open }),
 }))

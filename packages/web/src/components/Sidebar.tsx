@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 
 export function Sidebar() {
-  const { sidebarOpen, toggleSidebar, currentProjectId, setCurrentProjectId, setSettingsOpen } = useStore()
+  const { sidebarOpen, toggleSidebar, currentProjectId, setCurrentProjectId, setSettingsOpen, setCreateProjectOpen } = useStore()
   const { data: projectsData } = useProjects()
   const projects = projectsData?.data || []
 
@@ -69,7 +69,12 @@ export function Sidebar() {
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Projects
               </span>
-              <Button variant="ghost" size="icon" className="h-5 w-5">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-5 w-5"
+                onClick={() => setCreateProjectOpen(true)}
+              >
                 <Plus className="h-3 w-3" />
               </Button>
             </div>
