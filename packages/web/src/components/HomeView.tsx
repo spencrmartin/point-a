@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useIssues } from '@/hooks/useIssues'
 import { useProjects } from '@/hooks/useProjects'
 import { useStore } from '@/stores/useStore'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import { ProjectIcon } from '@/lib/project-icons'
 import { cn, formatRelativeDate } from '@/lib/utils'
 import { 
@@ -18,6 +19,7 @@ export function HomeView() {
   const { data: issuesData, isLoading } = useIssues({})
   const { data: projectsData } = useProjects()
   const { setActiveIssueId, setCurrentProjectId, setViewMode } = useStore()
+  const { homeBackground } = useSettingsStore()
 
   const issues = issuesData?.data || []
   const projects = projectsData?.data || []
@@ -61,7 +63,18 @@ export function HomeView() {
   }
 
   return (
-    <div className="p-6 space-y-8 max-w-5xl mx-auto">
+    <div className="relative min-h-full">
+      {/* Background Image */}
+      {homeBackground && (
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${homeBackground})` }}
+        >
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
+        </div>
+      )}
+      
+      <div className="relative p-6 space-y-8 max-w-5xl mx-auto">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold">Welcome back</h1>
@@ -152,7 +165,7 @@ export function HomeView() {
                   setCurrentProjectId(project.id)
                   setViewMode('board')
                 }}
-                className="flex items-center gap-3 p-4 rounded-xl border bg-card hover:bg-muted/50 transition-colors text-left"
+                className="flex items-center gap-3 p-4 rounded-xl border bg-card/90 backdrop-blur-sm hover:bg-muted/50 transition-colors text-left"
               >
                 <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
@@ -171,6 +184,7 @@ export function HomeView() {
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }
@@ -189,7 +203,7 @@ function StatCard({
   bgColor: string
 }) {
   return (
-    <div className="p-4 rounded-xl border bg-card">
+    <div className="p-4 rounded-xl border bg-card/90 backdrop-blur-sm">
       <div className="flex items-center gap-3">
         <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center', bgColor)}>
           <Icon className={cn('w-5 h-5', color)} />
@@ -235,7 +249,7 @@ function IssueTile({
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors text-left"
+      className="w-full flex items-center gap-3 p-3 rounded-lg border bg-card/90 backdrop-blur-sm hover:bg-muted/50 transition-colors text-left"
     >
       <StatusIcon className={cn('w-4 h-4 flex-shrink-0', statusColor)} />
       <div className="flex-1 min-w-0">

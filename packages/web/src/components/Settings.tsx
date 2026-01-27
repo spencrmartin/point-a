@@ -164,7 +164,25 @@ function SidebarItem({
 
 // ============ Appearance Settings ============
 function AppearanceSettings() {
-  const { theme, setTheme, accentColor, setAccentColor, compactMode, setCompactMode, sidebarDefaultExpanded, setSidebarDefaultExpanded } = useSettingsStore()
+  const { theme, setTheme, accentColor, setAccentColor, compactMode, setCompactMode, sidebarDefaultExpanded, setSidebarDefaultExpanded, homeBackground, setHomeBackground } = useSettingsStore()
+
+  const handleBackgroundUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image too large. Please choose an image under 5MB.')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const result = event.target?.result as string
+      setHomeBackground(result)
+    }
+    reader.readAsDataURL(file)
+  }
 
   return (
     <div className="space-y-8">
@@ -214,6 +232,49 @@ function AppearanceSettings() {
               )}
             </button>
           ))}
+        </div>
+      </SettingGroup>
+
+      {/* Home Background */}
+      <SettingGroup title="Home Background" description="Add a custom background image to the Home view">
+        <div className="space-y-3">
+          {homeBackground ? (
+            <div className="relative w-full max-w-xs">
+              <img 
+                src={homeBackground} 
+                alt="Home background preview" 
+                className="w-full h-32 object-cover rounded-lg border"
+              />
+              <Button
+                variant="destructive"
+                size="sm"
+                className="absolute top-2 right-2"
+                onClick={() => setHomeBackground(null)}
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
+          ) : (
+            <div className="w-full max-w-xs h-32 border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/30">
+              <span className="text-sm text-muted-foreground">No background set</span>
+            </div>
+          )}
+          <div>
+            <label className="cursor-pointer">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleBackgroundUpload}
+                className="hidden"
+              />
+              <Button variant="outline" size="sm" asChild>
+                <span>
+                  <Upload className="h-4 w-4 mr-2" />
+                  {homeBackground ? 'Change Image' : 'Upload Image'}
+                </span>
+              </Button>
+            </label>
+          </div>
         </div>
       </SettingGroup>
 

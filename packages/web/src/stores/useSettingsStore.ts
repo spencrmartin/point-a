@@ -14,6 +14,7 @@ interface SettingsState {
   accentColor: AccentColor
   compactMode: boolean
   sidebarDefaultExpanded: boolean
+  homeBackground: string | null // Base64 image or null
 
   // Default Views
   defaultView: DefaultView
@@ -37,6 +38,7 @@ interface SettingsState {
   setAccentColor: (color: AccentColor) => void
   setCompactMode: (compact: boolean) => void
   setSidebarDefaultExpanded: (expanded: boolean) => void
+  setHomeBackground: (background: string | null) => void
   setDefaultView: (view: DefaultView) => void
   setDefaultGrouping: (grouping: DefaultGrouping) => void
   setDefaultSortField: (field: 'createdAt' | 'updatedAt' | 'priority' | 'title') => void
@@ -56,6 +58,7 @@ const defaultSettings = {
   accentColor: 'blue' as AccentColor,
   compactMode: false,
   sidebarDefaultExpanded: true,
+  homeBackground: null as string | null,
   defaultView: 'board' as DefaultView,
   defaultGrouping: 'status' as DefaultGrouping,
   defaultSortField: 'createdAt' as const,
@@ -78,6 +81,7 @@ export const useSettingsStore = create<SettingsState>()(
       setAccentColor: (accentColor) => set({ accentColor }),
       setCompactMode: (compactMode) => set({ compactMode }),
       setSidebarDefaultExpanded: (sidebarDefaultExpanded) => set({ sidebarDefaultExpanded }),
+      setHomeBackground: (homeBackground) => set({ homeBackground }),
       setDefaultView: (defaultView) => set({ defaultView }),
       setDefaultGrouping: (defaultGrouping) => set({ defaultGrouping }),
       setDefaultSortField: (defaultSortField) => set({ defaultSortField }),
