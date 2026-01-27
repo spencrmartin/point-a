@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Issue Details</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 16px;
+      line-height: 1.5;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    
+    body.light { background: #ffffff; color: #1d1d1f; }
+    body.dark { background: #1d1d1f; color: #f5f5f7; }
+    
+    /* Loading state */
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 32px;
+    }
+    
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 2px solid currentColor;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      opacity: 0.6;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+      font-size: 0.875rem;
+      opacity: 0.6;
+    }
+    
+    .content-wrapper { display: none; }
+    .content-wrapper.is-ready { display: block; }
+    .loading.is-hidden { display: none; }
+    
+    /* Issue header */
+    .issue-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .issue-identifier {
+      font-size: 0.875rem;
+      font-weight: 600;
+      font-family: ui-monospace, monospace;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    
+    body.light .issue-identifier { background: #e5e5e7; color: #6e6e73; }
+    body.dark .issue-identifier { background: #3d3d3f; color: #a1a1a6; }
+    
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      line-height: 1.3;
+      flex: 1;
+    }
+    
+    /* Badges row */
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    /* Status colors */
+    .status-backlog { background: #6b728020; color: #6b7280; }
+    .status-todo { background: #3b82f620; color: #3b82f6; }
+    .status-in_progress { background: #f59e0b20; color: #f59e0b; }
+    .status-in_review { background: #8b5cf620; color: #8b5cf6; }
+    .status-done { background: #22c55e20; color: #22c55e; }
+    .status-cancelled { background: #ef444420; color: #ef4444; }
+    
+    /* Priority colors */
+    .priority-urgent { background: #ef444420; color: #ef4444; }
+    .priority-high { background: #f9731620; color: #f97316; }
+    .priority-medium { background: #eab30820; color: #eab308; }
+    .priority-low { background: #3b82f620; color: #3b82f6; }
+    .priority-none { background: #6b728020; color: #6b7280; }
+    
+    /* Type badge */
+    .type-bug { background: #ef444420; color: #ef4444; }
+    .type-feature { background: #8b5cf620; color: #8b5cf6; }
+    .type-improvement { background: #3b82f620; color: #3b82f6; }
+    .type-task { background: #6b728020; color: #6b7280; }
+    .type-epic { background: #6366f120; color: #6366f1; }
+    
+    /* Description */
+    .description {
+      font-size: 0.95rem;
+      margin-bottom: 16px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      padding: 12px;
+      border-radius: 8px;
+    }
+    
+    body.light .description { background: #f5f5f7; }
+    body.dark .description { background: #2d2d2f; }
+    
+    .description:empty { display: none; }
+    
+    /* Labels */
+    .labels {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    
+    .label {
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+    
+    /* Meta info */
+    .meta {
+      font-size: 0.75rem;
+      opacity: 0.6;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    /* Project badge */
+    .project-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.875rem;
+      margin-bottom: 12px;
+    }
+    
+    .project-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body class="light">
+  <!-- Loading state -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading issue...</div>
+  </div>
+
+  <!-- Content -->
+  <div class="content-wrapper" id="content">
+    <div class="project-badge" id="project-badge"></div>
+    
+    <div class="issue-header">
+      <span class="issue-identifier" id="issue-identifier"></span>
+      <h1 id="issue-title"></h1>
+    </div>
+    
+    <div class="badges" id="badges"></div>
+    
+    <div class="labels" id="labels"></div>
+    
+    <div class="description" id="description"></div>
+    
+    <div class="meta" id="meta"></div>
+  </div>
+
+  <script>
+    (function() {
+      'use strict';
+      
+      const pendingRequests = new Map();
+      let requestId = 0;
+      
+      const loadingEl = document.getElementById('loading');
+      const contentEl = document.getElementById('content');
+      const projectBadgeEl = document.getElementById('project-badge');
+      const identifierEl = document.getElementById('issue-identifier');
+      const titleEl = document.getElementById('issue-title');
+      const badgesEl = document.getElementById('badges');
+      const labelsEl = document.getElementById('labels');
+      const descriptionEl = document.getElementById('description');
+      const metaEl = document.getElementById('meta');
+      
+      function formatDate(isoString) {
+        if (!isoString) return '';
+        const date = new Date(isoString);
+        return date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+      }
+      
+      function populateIssue(rawData) {
+        console.log('[point-a-issue-view] populateIssue:', rawData);
+        
+        var data = rawData;
+        if (rawData && rawData.structuredContent) {
+          data = rawData.structuredContent;
+        }
+        
+        // Project badge
+        if (data.project) {
+          projectBadgeEl.innerHTML = '';
+          var iconSpan = document.createElement('span');
+          iconSpan.className = 'project-icon';
+          iconSpan.style.backgroundColor = (data.project.color || '#6366f1') + '20';
+          iconSpan.style.color = data.project.color || '#6366f1';
+          iconSpan.textContent = data.project.icon || '📋';
+          projectBadgeEl.appendChild(iconSpan);
+          
+          var nameSpan = document.createElement('span');
+          nameSpan.textContent = data.project.name;
+          projectBadgeEl.appendChild(nameSpan);
+        }
+        
+        // Identifier
+        identifierEl.textContent = data.identifier || '';
+        
+        // Title
+        titleEl.textContent = data.title || 'Untitled';
+        document.title = (data.identifier || '') + ' - ' + (data.title || 'Issue');
+        
+        // Badges (status, priority, type)
+        badgesEl.innerHTML = '';
+        
+        if (data.status) {
+          var statusBadge = document.createElement('span');
+          statusBadge.className = 'badge status-' + data.status;
+          statusBadge.textContent = data.status.replace('_', ' ');
+          badgesEl.appendChild(statusBadge);
+        }
+        
+        if (data.priority && data.priority !== 'none') {
+          var priorityBadge = document.createElement('span');
+          priorityBadge.className = 'badge priority-' + data.priority;
+          priorityBadge.textContent = data.priority + ' priority';
+          badgesEl.appendChild(priorityBadge);
+        }
+        
+        if (data.type) {
+          var typeBadge = document.createElement('span');
+          typeBadge.className = 'badge type-' + data.type;
+          typeBadge.textContent = data.type;
+          badgesEl.appendChild(typeBadge);
+        }
+        
+        // Labels
+        labelsEl.innerHTML = '';
+        if (data.labels && Array.isArray(data.labels) && data.labels.length > 0) {
+          for (var i = 0; i < data.labels.length; i++) {
+            var label = data.labels[i];
+            var labelSpan = document.createElement('span');
+            labelSpan.className = 'label';
+            labelSpan.style.backgroundColor = (label.color || '#6b7280') + '20';
+            labelSpan.style.color = label.color || '#6b7280';
+            labelSpan.textContent = label.name;
+            labelsEl.appendChild(labelSpan);
+          }
+        }
+        
+        // Description
+        descriptionEl.textContent = data.description || '';
+        
+        // Meta info
+        metaEl.innerHTML = '';
+        
+        if (data.assignee) {
+          var assigneeMeta = document.createElement('span');
+          assigneeMeta.className = 'meta-item';
+          assigneeMeta.textContent = '👤 ' + data.assignee;
+          metaEl.appendChild(assigneeMeta);
+        }
+        
+        if (data.dueDate) {
+          var dueMeta = document.createElement('span');
+          dueMeta.className = 'meta-item';
+          dueMeta.textContent = '📅 Due: ' + formatDate(data.dueDate);
+          metaEl.appendChild(dueMeta);
+        }
+        
+        if (data.createdAt) {
+          var createdMeta = document.createElement('span');
+          createdMeta.className = 'meta-item';
+          createdMeta.textContent = 'Created: ' + formatDate(data.createdAt);
+          metaEl.appendChild(createdMeta);
+        }
+        
+        if (data.estimate) {
+          var estimateMeta = document.createElement('span');
+          estimateMeta.className = 'meta-item';
+          estimateMeta.textContent = '⏱️ ' + data.estimate + ' pts';
+          metaEl.appendChild(estimateMeta);
+        }
+        
+        // Show content
+        loadingEl.classList.add('is-hidden');
+        contentEl.classList.add('is-ready');
+        reportSize();
+      }
+      
+      function handleMessage(event) {
+        var data = event.data;
+        if (!data || typeof data !== 'object') return;
+        if (data.jsonrpc !== '2.0') return;
+        
+        console.log('[point-a-issue-view] Received:', data.method || 'response');
+        
+        if ('id' in data && pendingRequests.has(data.id)) {
+          var handlers = pendingRequests.get(data.id);
+          pendingRequests.delete(data.id);
+          data.error ? handlers.reject(new Error(data.error.message)) : handlers.resolve(data.result);
+          return;
+        }
+        
+        if (data.method === 'ui/notifications/host-context-changed') {
+          if (data.params && data.params.theme) {
+            document.body.className = data.params.theme;
+          }
+        }
+        
+        if (data.method === 'ui/notifications/tool-result') {
+          var params = data.params;
+          if (params && params.structuredContent) {
+            populateIssue(params.structuredContent);
+          } else if (params && params.content) {
+            try {
+              var textContent = params.content.find(function(c) { return c.type === 'text'; });
+              if (textContent && textContent.text) {
+                var parsed = JSON.parse(textContent.text);
+                populateIssue(parsed);
+              }
+            } catch (e) {
+              console.error('[point-a-issue-view] Parse error:', e);
+            }
+          }
+        }
+      }
+      
+      function request(method, params) {
+        return new Promise(function(resolve, reject) {
+          var id = ++requestId;
+          pendingRequests.set(id, { resolve: resolve, reject: reject });
+          window.parent.postMessage({ jsonrpc: '2.0', id: id, method: method, params: params }, '*');
+          setTimeout(function() {
+            if (pendingRequests.has(id)) {
+              pendingRequests.delete(id);
+              reject(new Error('Request timed out'));
+            }
+          }, 30000);
+        });
+      }
+      
+      function notify(method, params) {
+        window.parent.postMessage({ jsonrpc: '2.0', method: method, params: params }, '*');
+      }
+      
+      function reportSize() {
+        notify('ui/notifications/size-changed', { 
+          height: document.body.scrollHeight,
+          width: document.body.scrollWidth
+        });
+      }
+      
+      async function initialize() {
+        try {
+          var result = await request('ui/initialize', {
+            protocolVersion: '2025-06-18',
+            capabilities: {},
+            appCapabilities: {},
+            clientInfo: { name: 'point-a-issue-view', version: '1.0.0' },
+            appInfo: { name: 'point-a-issue-view', version: '1.0.0' }
+          });
+          
+          if (result && result.hostContext && result.hostContext.theme) {
+            document.body.className = result.hostContext.theme;
+          }
+          
+          notify('ui/notifications/initialized', {});
+          reportSize();
+        } catch (error) {
+          console.error('Failed to initialize MCP App:', error);
+        }
+      }
+      
+      window.addEventListener('message', handleMessage);
+      initialize();
+    })();
+  </script>
+</body>
+</html>
