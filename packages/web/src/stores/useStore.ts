@@ -1,6 +1,23 @@
 import { create } from 'zustand'
 import type { ProjectWithStats, IssueWithRelations } from '@point-a/shared'
 
+// Filter types
+export interface IssueFilters {
+  status: string[]
+  priority: string[]
+  type: string[]
+  assignee: string | null
+}
+
+// Display options
+export interface DisplayOptions {
+  showEmptyGroups: boolean
+  showSubIssues: boolean
+  groupBy: 'status' | 'priority' | 'assignee' | 'project' | 'none'
+  sortBy: 'createdAt' | 'updatedAt' | 'priority' | 'dueDate' | 'title'
+  sortOrder: 'asc' | 'desc'
+}
+
 interface AppState {
   // Current project context
   currentProjectId: string | null
@@ -20,6 +37,16 @@ interface AppState {
   viewMode: 'board' | 'list' | 'timeline'
   setViewMode: (mode: 'board' | 'list' | 'timeline') => void
 
+  // Filters
+  filters: IssueFilters
+  setFilters: (filters: Partial<IssueFilters>) => void
+  clearFilters: () => void
+  hasActiveFilters: () => boolean
+
+  // Display options
+  displayOptions: DisplayOptions
+  setDisplayOptions: (options: Partial<DisplayOptions>) => void
+
   // Quick create modal
   quickCreateOpen: boolean
   setQuickCreateOpen: (open: boolean) => void
@@ -37,7 +64,22 @@ interface AppState {
   setCreateProjectOpen: (open: boolean) => void
 }
 
-export const useStore = create<AppState>((set) => ({
+const defaultFilters: IssueFilters = {
+  status: [],
+  priority: [],
+  type: [],
+  assignee: null,
+}
+
+const defaultDisplayOptions: DisplayOptions = {
+  showEmptyGroups: true,
+  showSubIssues: false,
+  groupBy: 'status',
+  sortBy: 'createdAt',
+  sortOrder: 'desc',
+}
+
+export const useStore = create<AppState>((set, get) => ({
   // Current project
   currentProjectId: null,
   setCurrentProjectId: (id) => set({ currentProjectId: id }),
@@ -64,6 +106,28 @@ export const useStore = create<AppState>((set) => ({
   // View
   viewMode: 'board',
   setViewMode: (mode) => set({ viewMode: mode }),
+
+  // Filters
+  filters: defaultFilters,
+  setFilters: (newFilters) => set((state) => ({
+    filters: { ...state.filters, ...newFilters }
+  })),
+  clearFilters: () => set({ filters: defaultFilters }),
+  hasActiveFilters: () => {
+    const { filters } = get()
+    return (
+      filters.status.length > 0 ||
+      filters.priority.length > 0 ||
+      filters.type.length > 0 ||
+      filters.assignee !== null
+    )
+  },
+
+  // Display options
+  displayOptions: defaultDisplayOptions,
+  setDisplayOptions: (newOptions) => set((state) => ({
+    displayOptions: { ...state.displayOptions, ...newOptions }
+  })),
 
   // Modals
   quickCreateOpen: false,

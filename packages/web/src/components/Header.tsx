@@ -1,14 +1,15 @@
 import { useStore } from '@/stores/useStore'
 import { useProjects } from '@/hooks/useProjects'
 import { Button } from './ui/button'
+import { FilterPopover } from './FilterPopover'
+import { DisplayPopover } from './DisplayPopover'
+import { ProjectIcon } from '@/lib/project-icons'
 import { cn } from '@/lib/utils'
 import { 
   LayoutGrid, 
   List, 
   GanttChart,
-  Plus,
-  Filter,
-  SlidersHorizontal
+  Plus
 } from 'lucide-react'
 
 export function Header() {
@@ -29,10 +30,10 @@ export function Header() {
         {currentProject ? (
           <>
             <div
-              className="w-6 h-6 rounded flex items-center justify-center"
-              style={{ backgroundColor: currentProject.color + '20', color: currentProject.color }}
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: currentProject.color + '20' }}
             >
-              {currentProject.icon}
+              <ProjectIcon iconId={currentProject.icon} size={18} color={currentProject.color} />
             </div>
             <div>
               <h1 className="font-semibold">{currentProject.name}</h1>
@@ -70,14 +71,8 @@ export function Header() {
 
       {/* Right: Actions */}
       <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm">
-          <Filter className="h-4 w-4 mr-2" />
-          Filter
-        </Button>
-        <Button variant="outline" size="sm">
-          <SlidersHorizontal className="h-4 w-4 mr-2" />
-          Display
-        </Button>
+        <FilterPopover />
+        <DisplayPopover />
         <Button size="sm" onClick={() => setQuickCreateOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           New Issue

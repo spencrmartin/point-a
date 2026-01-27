@@ -1,5 +1,5 @@
-import { db } from '../db/client'
-import { projects, projectCounters, issues } from '../db/schema'
+import { db } from '../db/client.js'
+import { projects, projectCounters, issues } from '../db/schema.js'
 import { eq, sql, count } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 import type { CreateProject, UpdateProject, ProjectWithStats } from '@point-a/shared'

@@ -1,6 +1,6 @@
 import Database, { type Database as DatabaseType } from 'better-sqlite3'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
-import * as schema from './schema'
+import * as schema from './schema.js'
 import { existsSync, mkdirSync } from 'fs'
 import { dirname, join } from 'path'
 import { homedir } from 'os'

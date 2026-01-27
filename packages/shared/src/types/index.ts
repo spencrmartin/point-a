@@ -8,14 +8,14 @@ export {
   updateIssueSchema,
   issueWithRelationsSchema,
   issueListQuerySchema,
-} from './issue'
+} from './issue.js'
 export type {
   Issue,
   CreateIssue,
   UpdateIssue,
   IssueWithRelations,
   IssueListQuery,
-} from './issue'
+} from './issue.js'
 
 // Project types
 export {
@@ -23,13 +23,13 @@ export {
   createProjectSchema,
   updateProjectSchema,
   projectWithStatsSchema,
-} from './project'
+} from './project.js'
 export type {
   Project,
   CreateProject,
   UpdateProject,
   ProjectWithStats,
-} from './project'
+} from './project.js'
 
 // Cycle types
 export {
@@ -37,25 +37,25 @@ export {
   createCycleSchema,
   updateCycleSchema,
   cycleWithStatsSchema,
-} from './cycle'
+} from './cycle.js'
 export type {
   Cycle,
   CreateCycle,
   UpdateCycle,
   CycleWithStats,
-} from './cycle'
+} from './cycle.js'
 
 // Label types
 export {
   labelSchema,
   createLabelSchema,
   updateLabelSchema,
-} from './label'
+} from './label.js'
 export type {
   Label,
   CreateLabel,
   UpdateLabel,
-} from './label'
+} from './label.js'
 
 // API Response types
 export interface ApiResponse<T> {

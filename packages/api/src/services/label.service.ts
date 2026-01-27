@@ -1,5 +1,5 @@
-import { db } from '../db/client'
-import { labels } from '../db/schema'
+import { db } from '../db/client.js'
+import { labels } from '../db/schema.js'
 import { eq, isNull, or } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 import type { CreateLabel, UpdateLabel } from '@point-a/shared'

@@ -1,5 +1,5 @@
-import { db } from '../db/client'
-import { cycles, issues } from '../db/schema'
+import { db } from '../db/client.js'
+import { cycles, issues } from '../db/schema.js'
 import { eq, sql, count } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 import type { CreateCycle, UpdateCycle, CycleWithStats } from '@point-a/shared'

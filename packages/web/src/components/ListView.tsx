@@ -46,19 +46,49 @@ const typeIcons = {
 }
 
 type SortField = 'createdAt' | 'updatedAt' | 'priority' | 'status' | 'title'
-type SortOrder = 'asc' | 'desc'
 
 export function ListView() {
-  const { currentProjectId, setActiveIssueId, selectedIssueIds, toggleIssueSelection, selectAllIssues, clearSelection } = useStore()
+  const { currentProjectId, setActiveIssueId, selectedIssueIds, toggleIssueSelection, selectAllIssues, clearSelection, filters, displayOptions } = useStore()
   const { data, isLoading, isFetching } = useIssues({ projectId: currentProjectId || undefined })
   const updateIssue = useUpdateIssue()
   
-  const [sortField, setSortField] = useState<SortField>('createdAt')
-  const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
+  const [sortField, setSortField] = useState<SortField>(displayOptions.sortBy === 'dueDate' ? 'createdAt' : displayOptions.sortBy as SortField)
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(displayOptions.sortOrder)
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['backlog', 'todo', 'in_progress', 'in_review']))
-  const [groupBy, setGroupBy] = useState<'status' | 'priority' | 'none'>('status')
 
-  const issues = data?.data || []
+  // Map display options groupBy to list view groupBy
+  const groupBy = displayOptions.groupBy === 'none' ? 'none' : 
+                  displayOptions.groupBy === 'status' ? 'status' :
+                  displayOptions.groupBy === 'priority' ? 'priority' : 'status'
+
+  const rawIssues = data?.data || []
+  
+  // Apply filters from store
+  const issues = useMemo(() => {
+    let filtered = rawIssues
+
+    // Apply status filter
+    if (filters.status.length > 0) {
+      filtered = filtered.filter(issue => filters.status.includes(issue.status))
+    }
+
+    // Apply priority filter
+    if (filters.priority.length > 0) {
+      filtered = filtered.filter(issue => filters.priority.includes(issue.priority))
+    }
+
+    // Apply type filter
+    if (filters.type.length > 0) {
+      filtered = filtered.filter(issue => filters.type.includes(issue.type))
+    }
+
+    // Apply assignee filter
+    if (filters.assignee) {
+      filtered = filtered.filter(issue => issue.assignee === filters.assignee)
+    }
+
+    return filtered
+  }, [rawIssues, filters])
 
   const toggleGroup = (group: string) => {
     const newExpanded = new Set(expandedGroups)
@@ -152,19 +182,13 @@ export function ListView() {
       {/* Toolbar */}
       <div className="flex items-center justify-between mb-4 px-2">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Group by:</span>
-          <select
-            value={groupBy}
-            onChange={(e) => setGroupBy(e.target.value as typeof groupBy)}
-            className="text-sm bg-muted px-2 py-1 rounded-md border-none"
-          >
-            <option value="status">Status</option>
-            <option value="priority">Priority</option>
-            <option value="none">None</option>
-          </select>
+          <span className="text-sm text-muted-foreground">
+            Grouped by {groupBy === 'none' ? 'none' : groupBy}
+          </span>
         </div>
         <div className="text-sm text-muted-foreground">
-          {issues.length} issues
+          {issues.length} issue{issues.length !== 1 ? 's' : ''}
+          {rawIssues.length !== issues.length && ` (${rawIssues.length} total)`}
         </div>
       </div>
 

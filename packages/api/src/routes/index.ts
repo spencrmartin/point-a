@@ -1,4 +1,4 @@
-export { default as projects } from './projects'
-export { default as issues } from './issues'
-export { default as cycles } from './cycles'
-export { default as labels } from './labels'
+export { default as projects } from './projects.js'
+export { default as issues } from './issues.js'
+export { default as cycles } from './cycles.js'
+export { default as labels } from './labels.js'

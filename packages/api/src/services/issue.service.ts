@@ -1,8 +1,8 @@
-import { db } from '../db/client'
-import { issues, issueLabels, labels, projects } from '../db/schema'
+import { db } from '../db/client.js'
+import { issues, issueLabels, labels, projects } from '../db/schema.js'
 import { eq, and, like, desc, asc, sql, inArray } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
-import { projectService } from './project.service'
+import { projectService } from './project.service.js'
 import type { CreateIssue, UpdateIssue, IssueListQuery, IssueWithRelations } from '@point-a/shared'
 
 export const issueService = {

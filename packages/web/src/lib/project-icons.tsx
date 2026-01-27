@@ -82,11 +82,13 @@ export function ProjectIcon({
   iconId, 
   className,
   size = 16,
+  color,
 }: { 
   iconId: string | null | undefined
   className?: string
   size?: number
+  color?: string
 }) {
   const Icon = getProjectIcon(iconId)
-  return <Icon className={className} size={size} />
+  return <Icon className={className} size={size} color={color} />
 }

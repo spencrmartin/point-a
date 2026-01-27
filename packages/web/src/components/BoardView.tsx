@@ -6,7 +6,7 @@ import { useIssues, useUpdateIssueStatus } from '@/hooks/useIssues'
 import { cn } from '@/lib/utils'
 import { Plus } from 'lucide-react'
 import { Button } from './ui/button'
-import type { IssueStatus } from '@point-a/shared'
+import type { IssueStatus, IssueWithRelations } from '@point-a/shared'
 
 const columns: { id: IssueStatus; label: string; color: string }[] = [
   { id: 'backlog', label: 'Backlog', color: 'bg-gray-500' },
@@ -17,17 +17,66 @@ const columns: { id: IssueStatus; label: string; color: string }[] = [
 ]
 
 export function BoardView() {
-  const { currentProjectId, setActiveIssueId, setQuickCreateOpen } = useStore()
+  const { currentProjectId, setActiveIssueId, setQuickCreateOpen, filters, displayOptions } = useStore()
   const { data, isLoading, isFetching } = useIssues({ projectId: currentProjectId || undefined })
   const updateStatus = useUpdateIssueStatus()
 
+  // Apply filters and sorting
+  const filteredAndSortedIssues = useMemo(() => {
+    let issues = data?.data || []
+
+    // Apply status filter
+    if (filters.status.length > 0) {
+      issues = issues.filter(issue => filters.status.includes(issue.status))
+    }
+
+    // Apply priority filter
+    if (filters.priority.length > 0) {
+      issues = issues.filter(issue => filters.priority.includes(issue.priority))
+    }
+
+    // Apply type filter
+    if (filters.type.length > 0) {
+      issues = issues.filter(issue => filters.type.includes(issue.type))
+    }
+
+    // Apply assignee filter
+    if (filters.assignee) {
+      issues = issues.filter(issue => issue.assignee === filters.assignee)
+    }
+
+    // Apply sorting
+    const sortMultiplier = displayOptions.sortOrder === 'asc' ? 1 : -1
+    issues = [...issues].sort((a, b) => {
+      switch (displayOptions.sortBy) {
+        case 'priority': {
+          const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3, none: 4 }
+          return (priorityOrder[a.priority] - priorityOrder[b.priority]) * sortMultiplier
+        }
+        case 'title':
+          return a.title.localeCompare(b.title) * sortMultiplier
+        case 'dueDate':
+          if (!a.dueDate && !b.dueDate) return 0
+          if (!a.dueDate) return 1
+          if (!b.dueDate) return -1
+          return (new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()) * sortMultiplier
+        case 'updatedAt':
+          return (new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()) * sortMultiplier
+        case 'createdAt':
+        default:
+          return (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) * sortMultiplier
+      }
+    })
+
+    return issues
+  }, [data, filters, displayOptions])
+
   const issuesByStatus = useMemo(() => {
-    const issues = data?.data || []
     return columns.reduce((acc, col) => {
-      acc[col.id] = issues.filter((issue) => issue.status === col.id)
+      acc[col.id] = filteredAndSortedIssues.filter((issue) => issue.status === col.id)
       return acc
-    }, {} as Record<IssueStatus, typeof issues>)
-  }, [data])
+    }, {} as Record<IssueStatus, IssueWithRelations[]>)
+  }, [filteredAndSortedIssues])
 
   const handleDragStart = (e: React.DragEvent, issueId: string) => {
     e.dataTransfer.setData('issueId', issueId)
@@ -58,12 +107,17 @@ export function BoardView() {
     )
   }
 
+  // Filter columns based on showEmptyGroups setting
+  const visibleColumns = displayOptions.showEmptyGroups 
+    ? columns 
+    : columns.filter(col => (issuesByStatus[col.id]?.length || 0) > 0)
+
   return (
     <div className={cn(
       'flex gap-4 overflow-x-auto pb-4 h-full transition-opacity duration-150',
       isFetching && 'opacity-70'
     )}>
-      {columns.map((column) => (
+      {visibleColumns.map((column) => (
         <div
           key={column.id}
           className="flex-shrink-0 w-72 flex flex-col"

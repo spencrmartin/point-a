@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
 import { createProjectSchema, updateProjectSchema } from '@point-a/shared'
-import { projectService } from '../services'
+import { projectService } from '../services/index.js'
 
 const app = new Hono()
 
