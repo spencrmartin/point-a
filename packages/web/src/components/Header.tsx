@@ -6,6 +6,7 @@ import { DisplayPopover } from './DisplayPopover'
 import { ProjectIcon } from '@/lib/project-icons'
 import { cn } from '@/lib/utils'
 import { 
+  Home,
   LayoutGrid, 
   List, 
   GanttChart,
@@ -22,12 +23,15 @@ export function Header() {
   const { data: projectsData } = useProjects()
   
   const currentProject = projectsData?.data?.find(p => p.id === currentProjectId)
+  const isHome = viewMode === 'home'
 
   return (
     <header className="h-14 border-b bg-card px-4 flex items-center justify-between">
       {/* Left: Project info */}
       <div className="flex items-center gap-3">
-        {currentProject ? (
+        {isHome ? (
+          <h1 className="font-semibold">Home</h1>
+        ) : currentProject ? (
           <>
             <div
               className="w-8 h-8 rounded-lg flex items-center justify-center"
@@ -50,6 +54,12 @@ export function Header() {
       {/* Center: View switcher */}
       <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
         <ViewButton
+          icon={Home}
+          label="Home"
+          active={viewMode === 'home'}
+          onClick={() => setViewMode('home')}
+        />
+        <ViewButton
           icon={LayoutGrid}
           label="Board"
           active={viewMode === 'board'}
@@ -71,8 +81,12 @@ export function Header() {
 
       {/* Right: Actions */}
       <div className="flex items-center gap-2">
-        <FilterPopover />
-        <DisplayPopover />
+        {!isHome && (
+          <>
+            <FilterPopover />
+            <DisplayPopover />
+          </>
+        )}
         <Button size="sm" onClick={() => setQuickCreateOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           New Issue

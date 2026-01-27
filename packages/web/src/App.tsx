@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'sonner'
 import { Sidebar } from './components/Sidebar'
 import { Header } from './components/Header'
+import { HomeView } from './components/HomeView'
 import { BoardView } from './components/BoardView'
 import { ListView } from './components/ListView'
 import { TimelineView } from './components/TimelineView'
@@ -108,10 +109,11 @@ function AppContent() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
         
-        <main className="flex-1 overflow-auto p-4">
-          {viewMode === 'board' && <BoardView />}
-          {viewMode === 'list' && <ListView />}
-          {viewMode === 'timeline' && <TimelineView />}
+        <main className="flex-1 overflow-auto">
+          {viewMode === 'home' && <HomeView />}
+          {viewMode === 'board' && <div className="p-4 h-full"><BoardView /></div>}
+          {viewMode === 'list' && <div className="p-4 h-full"><ListView /></div>}
+          {viewMode === 'timeline' && <div className="p-4 h-full"><TimelineView /></div>}
         </main>
       </div>
 

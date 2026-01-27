@@ -34,8 +34,8 @@ interface AppState {
   toggleSidebar: () => void
   
   // View preferences
-  viewMode: 'board' | 'list' | 'timeline'
-  setViewMode: (mode: 'board' | 'list' | 'timeline') => void
+  viewMode: 'home' | 'board' | 'list' | 'timeline'
+  setViewMode: (mode: 'home' | 'board' | 'list' | 'timeline') => void
 
   // Filters
   filters: IssueFilters
@@ -104,7 +104,7 @@ export const useStore = create<AppState>((set, get) => ({
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
 
   // View
-  viewMode: 'board',
+  viewMode: 'home',
   setViewMode: (mode) => set({ viewMode: mode }),
 
   // Filters
