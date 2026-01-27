@@ -2,14 +2,14 @@ import { z } from 'zod'
 
 // Project schema
 export const projectSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1), // nanoid format
   key: z.string().min(2).max(10).toUpperCase(), // e.g., "PROJ"
   name: z.string().min(1).max(100),
   description: z.string().nullable(),
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).default('#6366f1'),
   icon: z.string().default('📋'),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
 })
 
 export type Project = z.infer<typeof projectSchema>

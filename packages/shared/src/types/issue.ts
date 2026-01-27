@@ -31,7 +31,7 @@ export type IssueType = z.infer<typeof IssueType>
 
 // Base Issue schema
 export const issueSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1), // nanoid format
   identifier: z.string(), // e.g., "PROJ-123"
   title: z.string().min(1).max(500),
   description: z.string().nullable(),
@@ -40,12 +40,12 @@ export const issueSchema = z.object({
   type: IssueType.default('task'),
   assignee: z.string().nullable(),
   estimate: z.number().nullable(),
-  dueDate: z.string().datetime().nullable(),
-  projectId: z.string().uuid(),
-  cycleId: z.string().uuid().nullable(),
-  parentId: z.string().uuid().nullable(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
+  dueDate: z.string().nullable(),
+  projectId: z.string().min(1),
+  cycleId: z.string().nullable(),
+  parentId: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
 })
 
 export type Issue = z.infer<typeof issueSchema>
@@ -59,10 +59,10 @@ export const createIssueSchema = z.object({
   type: IssueType.optional(),
   assignee: z.string().optional(),
   estimate: z.number().optional(),
-  dueDate: z.string().datetime().optional(),
-  projectId: z.string().uuid(),
-  cycleId: z.string().uuid().optional(),
-  parentId: z.string().uuid().optional(),
+  dueDate: z.string().optional(),
+  projectId: z.string().min(1),
+  cycleId: z.string().optional(),
+  parentId: z.string().optional(),
   labels: z.array(z.string()).optional(),
 })
 
@@ -76,13 +76,13 @@ export type UpdateIssue = z.infer<typeof updateIssueSchema>
 // Issue with relations
 export const issueWithRelationsSchema = issueSchema.extend({
   project: z.object({
-    id: z.string().uuid(),
+    id: z.string().min(1),
     key: z.string(),
     name: z.string(),
     color: z.string(),
   }).optional(),
   labels: z.array(z.object({
-    id: z.string().uuid(),
+    id: z.string().min(1),
     name: z.string(),
     color: z.string(),
   })).optional(),
@@ -96,8 +96,8 @@ export const issueListQuerySchema = z.object({
   status: IssueStatus.optional(),
   priority: IssuePriority.optional(),
   type: IssueType.optional(),
-  projectId: z.string().uuid().optional(),
-  cycleId: z.string().uuid().optional(),
+  projectId: z.string().optional(),
+  cycleId: z.string().optional(),
   assignee: z.string().optional(),
   search: z.string().optional(),
   limit: z.coerce.number().min(1).max(100).default(50),

@@ -2,14 +2,14 @@ import { z } from 'zod'
 
 // Cycle (Sprint) schema
 export const cycleSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1), // nanoid format
   name: z.string().min(1).max(100),
   description: z.string().nullable(),
-  projectId: z.string().uuid(),
-  startDate: z.string().datetime().nullable(),
-  endDate: z.string().datetime().nullable(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
+  projectId: z.string().min(1),
+  startDate: z.string().nullable(),
+  endDate: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
 })
 
 export type Cycle = z.infer<typeof cycleSchema>
@@ -18,9 +18,9 @@ export type Cycle = z.infer<typeof cycleSchema>
 export const createCycleSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().optional(),
-  projectId: z.string().uuid(),
-  startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
+  projectId: z.string().min(1),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
 })
 
 export type CreateCycle = z.infer<typeof createCycleSchema>
