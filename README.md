@@ -2,6 +2,10 @@
 
 A local-first issue tracker with MCP integrations. Built for developers who want Linear-like functionality without the cloud dependency.
 
+<img width="1553" height="926" alt="Screenshot 2026-01-27 at 2 35 58 PM" src="https://github.com/user-attachments/assets/5817dda9-ebae-4a7c-97e6-e3c8943c700a" />
+<img width="1552" height="926" alt="Screenshot 2026-01-27 at 2 36 13 PM" src="https://github.com/user-attachments/assets/256e66a4-c068-40eb-a6bc-a082cfdf0474" />
+
+
 ## Features
 
 - **Local-first** - Your data stays on your machine (SQLite)
