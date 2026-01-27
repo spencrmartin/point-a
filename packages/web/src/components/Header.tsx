@@ -27,29 +27,8 @@ export function Header() {
 
   return (
     <header className="h-14 px-4 flex items-center justify-between">
-      {/* Left: Project info */}
-      <div className="flex items-center gap-3">
-        {isHome ? (
-          <h1 className="font-semibold">Home</h1>
-        ) : currentProject ? (
-          <>
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: currentProject.color + '20' }}
-            >
-              <ProjectIcon iconId={currentProject.icon} size={18} color={currentProject.color} />
-            </div>
-            <div>
-              <h1 className="font-semibold">{currentProject.name}</h1>
-              <p className="text-xs text-muted-foreground">
-                {currentProject.openIssueCount} open issues
-              </p>
-            </div>
-          </>
-        ) : (
-          <h1 className="font-semibold">All Issues</h1>
-        )}
-      </div>
+      {/* Left: Spacer for balance */}
+      <div className="w-24" />
 
       {/* Center: View switcher */}
       <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
@@ -81,12 +60,6 @@ export function Header() {
 
       {/* Right: Actions */}
       <div className="flex items-center gap-2">
-        {!isHome && (
-          <>
-            <FilterPopover />
-            <DisplayPopover />
-          </>
-        )}
         <Button size="icon" onClick={() => setQuickCreateOpen(true)}>
           <Plus className="h-5 w-5" />
         </Button>

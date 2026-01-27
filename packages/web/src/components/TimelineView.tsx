@@ -4,6 +4,8 @@ import { useIssues } from '@/hooks/useIssues'
 import { cn } from '@/lib/utils'
 import { Button } from './ui/button'
 import { Skeleton, CalendarDaySkeleton } from './Skeleton'
+import { FilterPopover } from './FilterPopover'
+import { DisplayPopover } from './DisplayPopover'
 import type { IssueWithRelations, IssueStatus } from '@point-a/shared'
 import {
   ChevronLeft,
@@ -129,32 +131,37 @@ export function TimelineView() {
           </h2>
         </div>
 
-        {/* View Mode Switcher */}
-        <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
-          <ViewModeButton
-            icon={LayoutGrid}
-            label="Month"
-            active={viewMode === 'month'}
-            onClick={() => setViewMode('month')}
-          />
-          <ViewModeButton
-            icon={CalendarRange}
-            label="Week"
-            active={viewMode === 'week'}
-            onClick={() => setViewMode('week')}
-          />
-          <ViewModeButton
-            icon={Calendar}
-            label="Day"
-            active={viewMode === 'day'}
-            onClick={() => setViewMode('day')}
-          />
-          <ViewModeButton
-            icon={CalendarDays}
-            label="Agenda"
-            active={viewMode === 'agenda'}
-            onClick={() => setViewMode('agenda')}
-          />
+        {/* Right side controls */}
+        <div className="flex items-center gap-2">
+          {/* View Mode Switcher */}
+          <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
+            <ViewModeButton
+              icon={LayoutGrid}
+              label="Month"
+              active={viewMode === 'month'}
+              onClick={() => setViewMode('month')}
+            />
+            <ViewModeButton
+              icon={CalendarRange}
+              label="Week"
+              active={viewMode === 'week'}
+              onClick={() => setViewMode('week')}
+            />
+            <ViewModeButton
+              icon={Calendar}
+              label="Day"
+              active={viewMode === 'day'}
+              onClick={() => setViewMode('day')}
+            />
+            <ViewModeButton
+              icon={CalendarDays}
+              label="Agenda"
+              active={viewMode === 'agenda'}
+              onClick={() => setViewMode('agenda')}
+            />
+          </div>
+          <FilterPopover />
+          <DisplayPopover />
         </div>
       </div>
 

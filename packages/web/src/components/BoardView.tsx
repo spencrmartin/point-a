@@ -4,8 +4,10 @@ import { BoardColumnSkeleton } from './Skeleton'
 import { useStore } from '@/stores/useStore'
 import { useIssues, useUpdateIssueStatus } from '@/hooks/useIssues'
 import { cn } from '@/lib/utils'
-import { Plus } from 'lucide-react'
+import { Plus, Filter, SlidersHorizontal } from 'lucide-react'
 import { Button } from './ui/button'
+import { FilterPopover } from './FilterPopover'
+import { DisplayPopover } from './DisplayPopover'
 import type { IssueStatus, IssueWithRelations } from '@point-a/shared'
 
 const columns: { id: IssueStatus; label: string; color: string }[] = [
@@ -113,10 +115,18 @@ export function BoardView() {
     : columns.filter(col => (issuesByStatus[col.id]?.length || 0) > 0)
 
   return (
-    <div className={cn(
-      'flex gap-4 overflow-x-auto pb-4 h-full transition-opacity duration-150',
-      isFetching && 'opacity-70'
-    )}>
+    <div className="flex flex-col h-full">
+      {/* Toolbar */}
+      <div className="flex items-center justify-end gap-2 pb-3">
+        <FilterPopover />
+        <DisplayPopover />
+      </div>
+      
+      {/* Board */}
+      <div className={cn(
+        'flex gap-4 overflow-x-auto pb-4 flex-1 transition-opacity duration-150',
+        isFetching && 'opacity-70'
+      )}>
       {visibleColumns.map((column) => (
         <div
           key={column.id}
@@ -167,6 +177,7 @@ export function BoardView() {
           </div>
         </div>
       ))}
+      </div>
     </div>
   )
 }

@@ -4,6 +4,8 @@ import { useIssues, useUpdateIssue } from '@/hooks/useIssues'
 import { cn, formatRelativeDate } from '@/lib/utils'
 import { Button } from './ui/button'
 import { ListRowSkeleton } from './Skeleton'
+import { FilterPopover } from './FilterPopover'
+import { DisplayPopover } from './DisplayPopover'
 import type { IssueWithRelations, IssueStatus, IssuePriority } from '@point-a/shared'
 import {
   ChevronDown,
@@ -183,12 +185,12 @@ export function ListView() {
       <div className="flex items-center justify-between mb-4 px-2">
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">
-            Grouped by {groupBy === 'none' ? 'none' : groupBy}
+            {issues.length} issue{issues.length !== 1 ? 's' : ''}
           </span>
         </div>
-        <div className="text-sm text-muted-foreground">
-          {issues.length} issue{issues.length !== 1 ? 's' : ''}
-          {rawIssues.length !== issues.length && ` (${rawIssues.length} total)`}
+        <div className="flex items-center gap-2">
+          <FilterPopover />
+          <DisplayPopover />
         </div>
       </div>
 

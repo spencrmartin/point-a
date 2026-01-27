@@ -24,93 +24,126 @@ export function PointALogo({ size = 32, className }: PointALogoProps) {
 
     let time = 0
 
+    // Simplex-like noise function for marble effect
+    const noise = (x: number, y: number, t: number) => {
+      const sin1 = Math.sin(x * 0.05 + t)
+      const sin2 = Math.sin(y * 0.05 + t * 0.7)
+      const sin3 = Math.sin((x + y) * 0.03 + t * 0.5)
+      const sin4 = Math.sin(Math.sqrt(x * x + y * y) * 0.05 - t * 0.3)
+      return (sin1 + sin2 + sin3 + sin4) / 4
+    }
+
     const render = () => {
-      time += 0.015
+      time += 0.02
 
       const centerX = size / 2
       const centerY = size / 2
-      const radius = size / 2 - 2
+      const radius = size / 2
 
-      // Clear canvas
-      ctx.clearRect(0, 0, size, size)
-
-      // Create ethereal gradient effect
-      const gradient = ctx.createRadialGradient(
-        centerX + Math.sin(time * 1.5) * 3,
-        centerY + Math.cos(time * 1.2) * 3,
-        0,
-        centerX,
-        centerY,
-        radius
-      )
-
-      // Animated color stops - deep, rich blue/indigo with high contrast
-      const hue1 = 220 + Math.sin(time * 0.5) * 10 // Deep blue
-      const hue2 = 195 + Math.cos(time * 0.7) * 15 // Teal/cyan
-      const hue3 = 250 + Math.sin(time * 0.3) * 10 // Deep indigo/violet
-
-      gradient.addColorStop(0, `hsla(${hue2}, 100%, 50%, 1)`)
-      gradient.addColorStop(0.25, `hsla(${hue1}, 95%, 40%, 1)`)
-      gradient.addColorStop(0.5, `hsla(${hue3}, 90%, 30%, 1)`)
-      gradient.addColorStop(0.75, `hsla(${hue3 + 10}, 85%, 20%, 1)`)
-      gradient.addColorStop(1, `hsla(${hue3 + 15}, 80%, 12%, 1)`)
-
-      // Draw main circle
-      ctx.beginPath()
-      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2)
-      ctx.fillStyle = gradient
-      ctx.fill()
-
-      // Add noise/grain texture overlay
-      const imageData = ctx.getImageData(0, 0, size * dpr, size * dpr)
+      // Create image data for pixel manipulation
+      const imageData = ctx.createImageData(size * dpr, size * dpr)
       const data = imageData.data
-      for (let i = 0; i < data.length; i += 4) {
-        const noise = (Math.random() - 0.5) * 15
-        data[i] = Math.min(255, Math.max(0, data[i] + noise))
-        data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + noise))
-        data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + noise))
+
+      for (let y = 0; y < size * dpr; y++) {
+        for (let x = 0; x < size * dpr; x++) {
+          const px = x / dpr
+          const py = y / dpr
+          
+          // Check if pixel is inside circle
+          const dx = px - centerX
+          const dy = py - centerY
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          
+          if (dist <= radius) {
+            // Marble noise pattern
+            const n = noise(px * 3, py * 3, time)
+            const n2 = noise(px * 5 + 100, py * 5 + 100, time * 1.3)
+            const marble = (n + n2 * 0.5) / 1.5
+            
+            // Swirl effect
+            const angle = Math.atan2(dy, dx) + marble * 0.5 + time * 0.1
+            const swirl = Math.sin(angle * 3 + dist * 0.1 + time) * 0.5 + 0.5
+            
+            // Color mixing - blues with light base
+            const t = (marble + 1) / 2 * swirl
+            
+            // Base light color
+            const baseR = 140
+            const baseG = 160
+            const baseB = 200
+            
+            // Blue/indigo veins
+            const veinR = 100
+            const veinG = 150
+            const veinB = 220
+            
+            // Bright cyan accent
+            const accentR = 180
+            const accentG = 220
+            const accentB = 255
+            
+            // Mix colors based on marble pattern
+            let r, g, b
+            if (t < 0.4) {
+              // Dark base
+              const mix = t / 0.4
+              r = baseR + (veinR - baseR) * mix * 0.3
+              g = baseG + (veinG - baseG) * mix * 0.3
+              b = baseB + (veinB - baseB) * mix * 0.3
+            } else if (t < 0.7) {
+              // Red veins
+              const mix = (t - 0.4) / 0.3
+              r = baseR + (veinR - baseR) * (0.3 + mix * 0.5)
+              g = baseG + (veinG - baseG) * (0.3 + mix * 0.3)
+              b = baseB + (veinB - baseB) * (0.3 + mix * 0.4)
+            } else {
+              // Bright accents
+              const mix = (t - 0.7) / 0.3
+              r = veinR + (accentR - veinR) * mix * 0.6
+              g = veinG + (accentG - veinG) * mix * 0.4
+              b = veinB + (accentB - veinB) * mix * 0.5
+            }
+            
+            // Add subtle shimmer
+            const shimmer = Math.sin(time * 2 + px * 0.2 + py * 0.2) * 10
+            r = Math.min(255, Math.max(0, r + shimmer))
+            g = Math.min(255, Math.max(0, g + shimmer * 0.5))
+            b = Math.min(255, Math.max(0, b + shimmer * 0.6))
+            
+            // Edge darkening for depth
+            const edgeFade = 1 - Math.pow(dist / radius, 2) * 0.3
+            r *= edgeFade
+            g *= edgeFade
+            b *= edgeFade
+            
+            const idx = (y * size * dpr + x) * 4
+            data[idx] = r
+            data[idx + 1] = g
+            data[idx + 2] = b
+            data[idx + 3] = 255
+          }
+        }
       }
+
       ctx.putImageData(imageData, 0, 0)
 
-      // Add subtle glow orbs
-      for (let i = 0; i < 3; i++) {
-        const orbX = centerX + Math.sin(time * (1 + i * 0.3) + i * 2) * (radius * 0.4)
-        const orbY = centerY + Math.cos(time * (1.2 + i * 0.2) + i * 2) * (radius * 0.4)
-        const orbRadius = radius * (0.15 + Math.sin(time * 2 + i) * 0.05)
-
-        const orbGradient = ctx.createRadialGradient(orbX, orbY, 0, orbX, orbY, orbRadius)
-        orbGradient.addColorStop(0, `hsla(${hue2 + i * 20}, 90%, 80%, 0.6)`)
-        orbGradient.addColorStop(1, `hsla(${hue2 + i * 20}, 90%, 80%, 0)`)
-
-        ctx.beginPath()
-        ctx.arc(orbX, orbY, orbRadius, 0, Math.PI * 2)
-        ctx.fillStyle = orbGradient
-        ctx.fill()
-      }
-
-      // Add center highlight
+      // Add glossy highlight
       const highlightGradient = ctx.createRadialGradient(
-        centerX - radius * 0.2,
-        centerY - radius * 0.2,
+        centerX - radius * 0.3,
+        centerY - radius * 0.3,
         0,
         centerX,
         centerY,
-        radius * 0.6
+        radius * 0.8
       )
-      highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)')
+      highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.25)')
+      highlightGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.05)')
       highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)')
 
       ctx.beginPath()
       ctx.arc(centerX, centerY, radius, 0, Math.PI * 2)
       ctx.fillStyle = highlightGradient
       ctx.fill()
-
-      // Clip to circle for clean edges
-      ctx.globalCompositeOperation = 'destination-in'
-      ctx.beginPath()
-      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.globalCompositeOperation = 'source-over'
 
       animationRef.current = requestAnimationFrame(render)
     }
@@ -127,7 +160,7 @@ export function PointALogo({ size = 32, className }: PointALogoProps) {
   return (
     <canvas
       ref={canvasRef}
-      className={cn('rounded-full', className)}
+      className={cn('rounded-full shadow-lg', className)}
       style={{ width: size, height: size }}
     />
   )
