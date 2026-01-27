@@ -24,8 +24,8 @@ export function Sidebar() {
     <TooltipProvider delayDuration={0}>
       <aside
         className={cn(
-          'h-full bg-card/80 backdrop-blur-sm rounded-2xl border shadow-sm flex flex-col transition-all duration-300 overflow-hidden',
-          sidebarOpen ? 'w-64' : 'w-16'
+          'h-full bg-card/80 backdrop-blur-sm rounded-2xl border shadow-sm flex flex-col transition-all duration-300',
+          sidebarOpen ? 'w-64 overflow-hidden' : 'w-16 overflow-visible'
         )}
       >
         {/* Header */}
