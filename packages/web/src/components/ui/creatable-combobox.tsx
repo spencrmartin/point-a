@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Check, ChevronsUpDown, Plus } from 'lucide-react'
+import { Check, ChevronsUpDown, Plus, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from './button'
 import {
@@ -21,6 +21,7 @@ export interface ComboboxOption {
   value: string
   label: string
   icon?: string
+  iconComponent?: LucideIcon
   color?: string
 }
 
@@ -92,8 +93,11 @@ export function CreatableCombobox({
         >
           {selectedOption ? (
             <span className="flex items-center gap-2 truncate">
-              {selectedOption.icon && <span>{selectedOption.icon}</span>}
-              {selectedOption.color && (
+              {selectedOption.iconComponent && (
+                <selectedOption.iconComponent className="h-4 w-4" style={selectedOption.color ? { color: selectedOption.color } : undefined} />
+              )}
+              {selectedOption.icon && !selectedOption.iconComponent && <span>{selectedOption.icon}</span>}
+              {selectedOption.color && !selectedOption.iconComponent && (
                 <span
                   className="w-3 h-3 rounded-full"
                   style={{ backgroundColor: selectedOption.color }}
@@ -129,8 +133,11 @@ export function CreatableCombobox({
                       value === option.value ? 'opacity-100' : 'opacity-0'
                     )}
                   />
-                  {option.icon && <span className="mr-2">{option.icon}</span>}
-                  {option.color && (
+                  {option.iconComponent && (
+                    <option.iconComponent className="mr-2 h-4 w-4" style={option.color ? { color: option.color } : undefined} />
+                  )}
+                  {option.icon && !option.iconComponent && <span className="mr-2">{option.icon}</span>}
+                  {option.color && !option.iconComponent && (
                     <span
                       className="mr-2 w-3 h-3 rounded-full"
                       style={{ backgroundColor: option.color }}

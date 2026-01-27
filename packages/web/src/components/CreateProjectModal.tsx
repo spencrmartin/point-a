@@ -2,22 +2,8 @@ import { useState } from 'react'
 import { useStore } from '@/stores/useStore'
 import { useCreateProject } from '@/hooks/useProjects'
 import { Button } from './ui/button'
-import { X } from 'lucide-react'
-
-const PROJECT_COLORS = [
-  '#ef4444', // red
-  '#f97316', // orange
-  '#eab308', // yellow
-  '#22c55e', // green
-  '#14b8a6', // teal
-  '#3b82f6', // blue
-  '#6366f1', // indigo
-  '#8b5cf6', // violet
-  '#ec4899', // pink
-  '#6b7280', // gray
-]
-
-const PROJECT_ICONS = ['📋', '🚀', '💡', '🎯', '⚡', '🔧', '📦', '🎨', '📊', '🔬']
+import { X, Check } from 'lucide-react'
+import { PROJECT_ICONS, PROJECT_COLORS, getProjectIcon } from '@/lib/project-icons'
 
 export function CreateProjectModal() {
   const { createProjectOpen, setCreateProjectOpen, setCurrentProjectId } = useStore()
@@ -27,7 +13,7 @@ export function CreateProjectModal() {
   const [key, setKey] = useState('')
   const [description, setDescription] = useState('')
   const [color, setColor] = useState(PROJECT_COLORS[6]) // default indigo
-  const [icon, setIcon] = useState('📋')
+  const [iconId, setIconId] = useState('folder')
   const [error, setError] = useState('')
 
   const handleClose = () => {
@@ -36,7 +22,7 @@ export function CreateProjectModal() {
     setKey('')
     setDescription('')
     setColor(PROJECT_COLORS[6])
-    setIcon('📋')
+    setIconId('folder')
     setError('')
   }
 
@@ -80,7 +66,7 @@ export function CreateProjectModal() {
         key: key.toUpperCase().trim(),
         description: description.trim() || undefined,
         color,
-        icon,
+        icon: iconId,
       })
 
       // Select the new project
@@ -116,10 +102,13 @@ export function CreateProjectModal() {
           {/* Icon & Color Preview */}
           <div className="flex items-center gap-4">
             <div
-              className="w-16 h-16 rounded-xl flex items-center justify-center text-2xl"
+              className="w-16 h-16 rounded-xl flex items-center justify-center"
               style={{ backgroundColor: color + '20', color }}
             >
-              {icon}
+              {(() => {
+                const IconComponent = getProjectIcon(iconId)
+                return <IconComponent size={32} />
+              })()}
             </div>
             <div className="flex-1">
               <p className="text-sm text-muted-foreground">
@@ -132,20 +121,24 @@ export function CreateProjectModal() {
           <div>
             <label className="text-sm font-medium mb-2 block">Icon</label>
             <div className="flex gap-2 flex-wrap">
-              {PROJECT_ICONS.map((emoji) => (
-                <button
-                  key={emoji}
-                  type="button"
-                  onClick={() => setIcon(emoji)}
-                  className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg transition-all ${
-                    icon === emoji
-                      ? 'bg-primary/20 ring-2 ring-primary'
-                      : 'bg-muted hover:bg-muted/80'
-                  }`}
-                >
-                  {emoji}
-                </button>
-              ))}
+              {PROJECT_ICONS.map((iconConfig) => {
+                const IconComponent = iconConfig.icon
+                return (
+                  <button
+                    key={iconConfig.id}
+                    type="button"
+                    onClick={() => setIconId(iconConfig.id)}
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
+                      iconId === iconConfig.id
+                        ? 'bg-primary/20 ring-2 ring-primary text-primary'
+                        : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+                    }`}
+                    title={iconConfig.label}
+                  >
+                    <IconComponent size={18} />
+                  </button>
+                )
+              })}
             </div>
           </div>
 

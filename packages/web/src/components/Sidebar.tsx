@@ -3,6 +3,7 @@ import { useStore } from '@/stores/useStore'
 import { useProjects } from '@/hooks/useProjects'
 import { Button } from './ui/button'
 import { PointALogo } from './PointALogo'
+import { ProjectIcon } from '@/lib/project-icons'
 import { 
   LayoutDashboard, 
   Inbox, 
@@ -91,10 +92,10 @@ export function Sidebar() {
               )}
             >
               <div
-                className="w-5 h-5 rounded flex items-center justify-center text-xs"
+                className="w-5 h-5 rounded flex items-center justify-center"
                 style={{ backgroundColor: project.color + '20', color: project.color }}
               >
-                {project.icon}
+                <ProjectIcon iconId={project.icon} size={14} />
               </div>
               {sidebarOpen && (
                 <>

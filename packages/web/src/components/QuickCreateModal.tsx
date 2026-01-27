@@ -4,40 +4,51 @@ import { useProjects, useCreateProject } from '@/hooks/useProjects'
 import { useCreateIssue } from '@/hooks/useIssues'
 import { Button } from './ui/button'
 import { CreatableCombobox, type ComboboxOption } from './ui/creatable-combobox'
-import { X } from 'lucide-react'
+import { 
+  X, 
+  Circle, 
+  CircleDot, 
+  Clock, 
+  Eye, 
+  CheckCircle2, 
+  XCircle,
+  Minus,
+  ArrowDown,
+  ArrowUp,
+  AlertCircle,
+  CheckSquare,
+  Bug,
+  Sparkles,
+  Wrench,
+  Layers,
+} from 'lucide-react'
+import { PROJECT_COLORS, getProjectIcon, getRandomProjectColor, getRandomProjectIcon } from '@/lib/project-icons'
 import type { IssuePriority, IssueType, IssueStatus } from '@point-a/shared'
 
 const STATUS_OPTIONS: ComboboxOption[] = [
-  { value: 'backlog', label: 'Backlog', icon: '📋' },
-  { value: 'todo', label: 'To Do', icon: '📝' },
-  { value: 'in_progress', label: 'In Progress', icon: '🔄' },
-  { value: 'in_review', label: 'In Review', icon: '👀' },
-  { value: 'done', label: 'Done', icon: '✅' },
-  { value: 'cancelled', label: 'Cancelled', icon: '❌' },
+  { value: 'backlog', label: 'Backlog', iconComponent: Circle },
+  { value: 'todo', label: 'To Do', iconComponent: CircleDot },
+  { value: 'in_progress', label: 'In Progress', iconComponent: Clock },
+  { value: 'in_review', label: 'In Review', iconComponent: Eye },
+  { value: 'done', label: 'Done', iconComponent: CheckCircle2 },
+  { value: 'cancelled', label: 'Cancelled', iconComponent: XCircle },
 ]
 
 const PRIORITY_OPTIONS: ComboboxOption[] = [
-  { value: 'none', label: 'No Priority', icon: '⚪' },
-  { value: 'low', label: 'Low', icon: '🔵' },
-  { value: 'medium', label: 'Medium', icon: '🟡' },
-  { value: 'high', label: 'High', icon: '🟠' },
-  { value: 'urgent', label: 'Urgent', icon: '🔴' },
+  { value: 'none', label: 'No Priority', iconComponent: Minus, color: '#9ca3af' },
+  { value: 'low', label: 'Low', iconComponent: ArrowDown, color: '#3b82f6' },
+  { value: 'medium', label: 'Medium', iconComponent: Minus, color: '#eab308' },
+  { value: 'high', label: 'High', iconComponent: ArrowUp, color: '#f97316' },
+  { value: 'urgent', label: 'Urgent', iconComponent: AlertCircle, color: '#ef4444' },
 ]
 
 const TYPE_OPTIONS: ComboboxOption[] = [
-  { value: 'task', label: 'Task', icon: '✅' },
-  { value: 'bug', label: 'Bug', icon: '🐛' },
-  { value: 'feature', label: 'Feature', icon: '✨' },
-  { value: 'improvement', label: 'Improvement', icon: '🔧' },
-  { value: 'epic', label: 'Epic', icon: '📦' },
+  { value: 'task', label: 'Task', iconComponent: CheckSquare, color: '#6b7280' },
+  { value: 'bug', label: 'Bug', iconComponent: Bug, color: '#ef4444' },
+  { value: 'feature', label: 'Feature', iconComponent: Sparkles, color: '#8b5cf6' },
+  { value: 'improvement', label: 'Improvement', iconComponent: Wrench, color: '#3b82f6' },
+  { value: 'epic', label: 'Epic', iconComponent: Layers, color: '#6366f1' },
 ]
-
-const PROJECT_COLORS = [
-  '#ef4444', '#f97316', '#eab308', '#22c55e', '#14b8a6',
-  '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#6b7280',
-]
-
-const PROJECT_ICONS = ['📋', '🚀', '💡', '🎯', '⚡', '🔧', '📦', '🎨', '📊', '🔬']
 
 export function QuickCreateModal() {
   const { quickCreateOpen, setQuickCreateOpen, currentProjectId, setCurrentProjectId } = useStore()
@@ -66,7 +77,7 @@ export function QuickCreateModal() {
   const projectOptions: ComboboxOption[] = projects.map((p) => ({
     value: p.id,
     label: p.name,
-    icon: p.icon,
+    iconComponent: getProjectIcon(p.icon),
     color: p.color,
   }))
 
@@ -79,8 +90,8 @@ export function QuickCreateModal() {
         .slice(0, 4) || 'PROJ'
       
       // Pick random color and icon
-      const color = PROJECT_COLORS[Math.floor(Math.random() * PROJECT_COLORS.length)]
-      const icon = PROJECT_ICONS[Math.floor(Math.random() * PROJECT_ICONS.length)]
+      const color = getRandomProjectColor()
+      const icon = getRandomProjectIcon()
 
       const result = await createProject.mutateAsync({
         name,
