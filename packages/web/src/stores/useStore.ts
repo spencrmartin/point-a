@@ -35,8 +35,12 @@ interface AppState {
   toggleSidebar: () => void
   
   // View preferences
-  viewMode: 'home' | 'board' | 'list' | 'timeline'
-  setViewMode: (mode: 'home' | 'board' | 'list' | 'timeline') => void
+  viewMode: 'home' | 'board' | 'list' | 'timeline' | 'inbox' | 'my-issues'
+  setViewMode: (mode: 'home' | 'board' | 'list' | 'timeline' | 'inbox' | 'my-issues') => void
+  
+  // Sub-view for inbox/my-issues (which layout to use within those sections)
+  subViewMode: 'board' | 'list' | 'timeline'
+  setSubViewMode: (mode: 'board' | 'list' | 'timeline') => void
 
   // Filters
   filters: IssueFilters
@@ -108,6 +112,10 @@ export const useStore = create<AppState>((set, get) => ({
   // View
   viewMode: 'home',
   setViewMode: (mode) => set({ viewMode: mode }),
+  
+  // Sub-view for inbox/my-issues
+  subViewMode: 'list',
+  setSubViewMode: (mode) => set({ subViewMode: mode }),
 
   // Filters
   filters: defaultFilters,

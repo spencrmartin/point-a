@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useSettingsStore, Theme, AccentColor, DefaultView, DefaultGrouping, DefaultPriority, DefaultIssueType } from '@/stores/useSettingsStore'
+import { useUserStore } from '@/stores/useUserStore'
 import { useProjects } from '@/hooks/useProjects'
 import { Button } from './ui/button'
 import { cn } from '@/lib/utils'
@@ -22,6 +23,7 @@ import {
   RotateCcw,
   Github,
   ExternalLink,
+  User,
 } from 'lucide-react'
 import { PointALogo } from './PointALogo'
 
@@ -30,7 +32,7 @@ interface SettingsProps {
   onClose: () => void
 }
 
-type SettingsSection = 'appearance' | 'views' | 'issues' | 'shortcuts' | 'data' | 'about'
+type SettingsSection = 'profile' | 'appearance' | 'views' | 'issues' | 'shortcuts' | 'data' | 'about'
 
 const accentColors: { id: AccentColor; label: string; color: string }[] = [
   { id: 'blue', label: 'Blue', color: '#3b82f6' },
@@ -42,7 +44,7 @@ const accentColors: { id: AccentColor; label: string; color: string }[] = [
 ]
 
 export function Settings({ open, onClose }: SettingsProps) {
-  const [activeSection, setActiveSection] = useState<SettingsSection>('appearance')
+  const [activeSection, setActiveSection] = useState<SettingsSection>('profile')
   const settings = useSettingsStore()
 
   if (!open) return null
@@ -61,6 +63,12 @@ export function Settings({ open, onClose }: SettingsProps) {
           </div>
 
           <nav className="flex-1 space-y-1">
+            <SidebarItem
+              icon={User}
+              label="Profile"
+              active={activeSection === 'profile'}
+              onClick={() => setActiveSection('profile')}
+            />
             <SidebarItem
               icon={Palette}
               label="Appearance"
@@ -124,6 +132,7 @@ export function Settings({ open, onClose }: SettingsProps) {
 
           {/* Content Area */}
           <div className="flex-1 overflow-y-auto p-6">
+            {activeSection === 'profile' && <ProfileSettings />}
             {activeSection === 'appearance' && <AppearanceSettings />}
             {activeSection === 'views' && <ViewsSettings />}
             {activeSection === 'issues' && <IssuesSettings />}
@@ -132,6 +141,96 @@ export function Settings({ open, onClose }: SettingsProps) {
             {activeSection === 'about' && <AboutSettings />}
           </div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// ============ Profile Settings ============
+function ProfileSettings() {
+  const { user, setUser, getInitials } = useUserStore()
+  const [name, setName] = useState(user?.name || '')
+  const [username, setUsername] = useState(user?.username || '')
+  const [email, setEmail] = useState(user?.email || '')
+
+  const handleSave = () => {
+    setUser({ name, username, email })
+  }
+
+  const hasChanges = name !== (user?.name || '') || 
+                     username !== (user?.username || '') || 
+                     email !== (user?.email || '')
+
+  return (
+    <div className="space-y-8">
+      {/* Avatar Preview */}
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xl font-medium">
+          {name || username ? getInitials() : '?'}
+        </div>
+        <div>
+          <h4 className="font-medium">{name || username || 'Set up your profile'}</h4>
+          <p className="text-sm text-muted-foreground">
+            {username ? `@${username}` : 'Your identity for issue assignment'}
+          </p>
+        </div>
+      </div>
+
+      {/* Name */}
+      <SettingGroup title="Display Name" description="Your full name shown in the app">
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="John Doe"
+          className="w-full max-w-xs px-3 py-2 rounded-md border bg-background text-sm"
+        />
+      </SettingGroup>
+
+      {/* Username */}
+      <SettingGroup title="Username" description="Used for @mentions and issue assignment matching">
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground">@</span>
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+            placeholder="johndoe"
+            className="w-full max-w-xs px-3 py-2 rounded-md border bg-background text-sm"
+          />
+        </div>
+      </SettingGroup>
+
+      {/* Email */}
+      <SettingGroup title="Email" description="Optional - for future notifications">
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="john@example.com"
+          className="w-full max-w-xs px-3 py-2 rounded-md border bg-background text-sm"
+        />
+      </SettingGroup>
+
+      {/* Save Button */}
+      <div className="pt-4 border-t">
+        <Button onClick={handleSave} disabled={!hasChanges}>
+          <Check className="h-4 w-4 mr-2" />
+          Save Profile
+        </Button>
+        {!hasChanges && user && (
+          <span className="ml-3 text-sm text-muted-foreground">Profile saved</span>
+        )}
+      </div>
+
+      {/* Info */}
+      <div className="p-4 bg-muted/50 rounded-lg">
+        <h5 className="font-medium text-sm mb-2">How it works</h5>
+        <ul className="text-sm text-muted-foreground space-y-1">
+          <li>• Your username is used to match issues assigned to you</li>
+          <li>• "My Issues" shows issues where assignee matches your username or name</li>
+          <li>• Set your username to match how you're assigned in issues</li>
+        </ul>
       </div>
     </div>
   )
