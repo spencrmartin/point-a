@@ -3,6 +3,8 @@ import { useStore } from '@/stores/useStore'
 import { useIssue, useUpdateIssue, useDeleteIssue } from '@/hooks/useIssues'
 import { Button } from './ui/button'
 import { CreatableCombobox, type ComboboxOption } from './ui/creatable-combobox'
+import { CommentThread } from './CommentThread'
+import { ChecklistSection } from './ChecklistSection'
 import { cn, formatRelativeDate } from '@/lib/utils'
 import { 
   X, 
@@ -372,6 +374,11 @@ export function IssueDetailModal() {
                   )}
                 </div>
 
+                {/* Checklist */}
+                <div className="pt-4 border-t">
+                  <ChecklistSection issueId={issue.id} />
+                </div>
+
                 {/* Metadata */}
                 <div className="flex items-center gap-6 text-xs text-muted-foreground pt-4 border-t">
                   <div className="flex items-center gap-1.5">
@@ -388,6 +395,11 @@ export function IssueDetailModal() {
                       Due {formatRelativeDate(issue.dueDate)}
                     </div>
                   )}
+                </div>
+
+                {/* Comments */}
+                <div className="pt-4 border-t">
+                  <CommentThread issueId={issue.id} />
                 </div>
               </div>
             </div>

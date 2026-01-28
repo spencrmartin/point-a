@@ -1,11 +1,14 @@
 import { cn } from '@/lib/utils'
 import { useStore } from '@/stores/useStore'
 import { useUserStore } from '@/stores/useUserStore'
+import { useSavedViewsStore, SAVED_VIEW_ICONS, type SavedViewIcon } from '@/stores/useSavedViewsStore'
+import { useKeyboardContext } from '@/contexts/KeyboardContext'
 import { useProjects } from '@/hooks/useProjects'
 import { useIssues } from '@/hooks/useIssues'
 import { Button } from './ui/button'
 import { Badge } from './ui/badge'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { PointALogo } from './PointALogo'
 import { ProjectIcon } from '@/lib/project-icons'
 import { 
@@ -15,16 +18,189 @@ import {
   FolderKanban,
   Plus,
   ChevronLeft,
+  ChevronDown,
   Settings,
   Search,
-  Home
+  Home,
+  Bookmark,
+  ChevronRight,
+  Flame,
+  Zap,
+  Bug,
+  Rocket,
+  Star,
+  Heart,
+  Flag,
+  Target,
+  Clock,
+  Calendar,
+  Filter,
+  Layers,
+  Grid,
+  List,
+  CheckCircle,
+  AlertCircle,
+  AlertTriangle,
+  Eye,
+  Archive,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  Keyboard,
+  type LucideIcon,
 } from 'lucide-react'
+import { useState } from 'react'
+import { toast } from 'sonner'
+
+// Map icon names to Lucide components
+const iconMap: Record<SavedViewIcon, LucideIcon> = {
+  'flame': Flame,
+  'zap': Zap,
+  'bug': Bug,
+  'rocket': Rocket,
+  'star': Star,
+  'heart': Heart,
+  'bookmark': Bookmark,
+  'flag': Flag,
+  'target': Target,
+  'clock': Clock,
+  'calendar': Calendar,
+  'filter': Filter,
+  'layers': Layers,
+  'grid': Grid,
+  'list': List,
+  'check-circle': CheckCircle,
+  'alert-circle': AlertCircle,
+  'alert-triangle': AlertTriangle,
+  'eye': Eye,
+  'archive': Archive,
+}
+
+function SavedViewIconComponent({ icon, className }: { icon: SavedViewIcon; className?: string }) {
+  const IconComponent = iconMap[icon] || Bookmark
+  return <IconComponent className={className} />
+}
+
+// Separate component for saved view item to manage its own popover state
+function SavedViewItem({
+  view,
+  isActive,
+  iconMap,
+  onClick,
+  onChangeIcon,
+  onDelete,
+}: {
+  view: { id: string; name: string; icon: SavedViewIcon }
+  isActive: boolean
+  iconMap: Record<SavedViewIcon, LucideIcon>
+  onClick: () => void
+  onChangeIcon: (icon: SavedViewIcon) => void
+  onDelete: () => void
+}) {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [iconPickerOpen, setIconPickerOpen] = useState(false)
+
+  return (
+    <div
+      className={cn(
+        'group flex items-center gap-1 rounded-md transition-colors',
+        'hover:bg-accent',
+        isActive && 'bg-accent'
+      )}
+    >
+      <button
+        onClick={onClick}
+        className="flex-1 flex items-center gap-2 px-2 py-1.5 text-sm"
+      >
+        <SavedViewIconComponent icon={view.icon} className="h-4 w-4 flex-shrink-0" />
+        <span className="flex-1 text-left truncate">{view.name}</span>
+      </button>
+      
+      <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+        <PopoverTrigger asChild>
+          <button className="p-1 mr-1 opacity-0 group-hover:opacity-100 hover:bg-muted rounded transition-opacity">
+            <MoreHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="w-48 p-1">
+          {/* Change Icon - opens icon picker */}
+          <Popover open={iconPickerOpen} onOpenChange={setIconPickerOpen}>
+            <PopoverTrigger asChild>
+              <button
+                className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-accent"
+              >
+                <Pencil className="h-4 w-4" />
+                Change Icon
+                <ChevronRight className="h-4 w-4 ml-auto" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent side="right" align="start" className="w-auto p-2">
+              <div className="grid grid-cols-5 gap-1">
+                {SAVED_VIEW_ICONS.map((iconName) => {
+                  const IconComp = iconMap[iconName]
+                  return (
+                    <button
+                      key={iconName}
+                      onClick={() => {
+                        onChangeIcon(iconName)
+                        setIconPickerOpen(false)
+                        setMenuOpen(false)
+                      }}
+                      className={cn(
+                        'p-2 rounded hover:bg-muted',
+                        view.icon === iconName && 'bg-primary/10'
+                      )}
+                      title={iconName}
+                    >
+                      <IconComp className="h-4 w-4" />
+                    </button>
+                  )
+                })}
+              </div>
+            </PopoverContent>
+          </Popover>
+          
+          <div className="-mx-1 my-1 h-px bg-muted" />
+          
+          {/* Delete */}
+          <button
+            onClick={() => {
+              onDelete()
+              setMenuOpen(false)
+            }}
+            className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-accent text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
+            Delete View
+          </button>
+        </PopoverContent>
+      </Popover>
+    </div>
+  )
+}
 
 export function Sidebar() {
-  const { sidebarOpen, toggleSidebar, currentProjectId, setCurrentProjectId, viewMode, setViewMode, setSettingsOpen, setCreateProjectOpen } = useStore()
+  const { sidebarOpen, toggleSidebar, currentProjectId, setCurrentProjectId, viewMode, setViewMode, setCreateProjectOpen, setFilters, setDisplayOptions } = useStore()
   const { getUserIdentifier } = useUserStore()
+  const { views, activeViewId, setActiveView, updateView, deleteView } = useSavedViewsStore()
+  const { setSettingsOpen, setShortcutsHelpOpen } = useKeyboardContext()
   const { data: projectsData } = useProjects()
   const projects = projectsData?.data || []
+  
+  // Collapsible sections state
+  const [savedViewsExpanded, setSavedViewsExpanded] = useState(true)
+  
+  // Handle changing a saved view's icon
+  const handleChangeIcon = (viewId: string, newIcon: SavedViewIcon) => {
+    updateView(viewId, { icon: newIcon })
+    toast.success('Icon updated')
+  }
+  
+  // Handle deleting a saved view
+  const handleDeleteView = (viewId: string, viewName: string) => {
+    deleteView(viewId)
+    toast.success(`"${viewName}" deleted`)
+  }
   
   // Fetch inbox count (backlog + no priority)
   const { data: inboxData } = useIssues({ status: 'backlog', priority: 'none' })
@@ -38,6 +214,23 @@ export function Sidebar() {
   const myIssuesCount = myIssuesData?.data?.filter(
     (i: any) => i.status !== 'done' && i.status !== 'cancelled'
   )?.length || 0
+
+  // Handle clicking a saved view
+  const handleSavedViewClick = (view: typeof views[0]) => {
+    setActiveView(view.id)
+    setFilters(view.filters)
+    setDisplayOptions({
+      groupBy: view.groupBy,
+      sortBy: view.sortBy,
+      sortOrder: view.sortOrder,
+    })
+    if (view.projectId) {
+      setCurrentProjectId(view.projectId)
+    } else {
+      setCurrentProjectId(null)
+    }
+    setViewMode('list')
+  }
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -130,6 +323,77 @@ export function Sidebar() {
             }}
           />
           
+          {/* Saved Views Section */}
+          {views.length > 0 && (
+            <div className="pt-4">
+              {sidebarOpen ? (
+                <button
+                  onClick={() => setSavedViewsExpanded(!savedViewsExpanded)}
+                  className="w-full flex items-center justify-between px-2 mb-2 hover:bg-transparent"
+                >
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Saved Views
+                  </span>
+                  {savedViewsExpanded ? (
+                    <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                  ) : (
+                    <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                  )}
+                </button>
+              ) : (
+                <div className="flex justify-center mb-2">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button className="p-1">
+                        <Bookmark className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      <p>Saved Views</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              )}
+              
+              {(savedViewsExpanded || !sidebarOpen) && views.map((view) => {
+                if (!sidebarOpen) {
+                  return (
+                    <Tooltip key={view.id}>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => handleSavedViewClick(view)}
+                          className={cn(
+                            'w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors',
+                            'hover:bg-accent',
+                            activeViewId === view.id && 'bg-accent',
+                            'justify-center'
+                          )}
+                        >
+                          <SavedViewIconComponent icon={view.icon} className="h-4 w-4 flex-shrink-0" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">
+                        <p>{view.name}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )
+                }
+
+                return (
+                  <SavedViewItem
+                    key={view.id}
+                    view={view}
+                    isActive={activeViewId === view.id}
+                    iconMap={iconMap}
+                    onClick={() => handleSavedViewClick(view)}
+                    onChangeIcon={(newIcon) => handleChangeIcon(view.id, newIcon)}
+                    onDelete={() => handleDeleteView(view.id, view.name)}
+                  />
+                )
+              })}
+            </div>
+          )}
+
           {/* Projects Section */}
           <div className="pt-4">
             {sidebarOpen && (
@@ -199,12 +463,20 @@ export function Sidebar() {
         </nav>
 
         {/* Footer */}
-        <div className="p-3 border-t">
+        <div className="p-3 border-t space-y-1">
+          <NavItem 
+            icon={Keyboard} 
+            label="Shortcuts" 
+            collapsed={!sidebarOpen} 
+            onClick={() => setShortcutsHelpOpen(true)}
+            shortcut="⌘?"
+          />
           <NavItem 
             icon={Settings} 
             label="Settings" 
             collapsed={!sidebarOpen} 
             onClick={() => setSettingsOpen(true)}
+            shortcut="⌘,"
           />
         </div>
       </aside>
@@ -218,6 +490,7 @@ function NavItem({
   collapsed,
   active,
   count,
+  shortcut,
   onClick 
 }: { 
   icon: React.ElementType
@@ -225,6 +498,7 @@ function NavItem({
   collapsed: boolean
   active?: boolean
   count?: number
+  shortcut?: string
   onClick?: () => void
 }) {
   const button = (
@@ -246,6 +520,11 @@ function NavItem({
               {count}
             </Badge>
           )}
+          {shortcut && (
+            <kbd className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+              {shortcut}
+            </kbd>
+          )}
         </>
       )}
     </button>
@@ -265,7 +544,7 @@ function NavItem({
           </div>
         </TooltipTrigger>
         <TooltipContent side="right">
-          <p>{label}{count !== undefined && count > 0 ? ` (${count})` : ''}</p>
+          <p>{label}{shortcut ? ` (${shortcut})` : ''}{count !== undefined && count > 0 ? ` (${count})` : ''}</p>
         </TooltipContent>
       </Tooltip>
     )

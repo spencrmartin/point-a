@@ -57,6 +57,32 @@ export type {
   UpdateLabel,
 } from './label.js'
 
+// Comment types
+export {
+  CommentSchema,
+  CreateCommentSchema,
+  UpdateCommentSchema,
+} from './comment.js'
+export type {
+  Comment,
+  CreateCommentInput,
+  UpdateCommentInput,
+} from './comment.js'
+
+// Checklist types
+export {
+  checklistItemSchema,
+  createChecklistItemSchema,
+  updateChecklistItemSchema,
+  reorderChecklistItemsSchema,
+} from './checklist.js'
+export type {
+  ChecklistItem,
+  CreateChecklistItem,
+  UpdateChecklistItem,
+  ReorderChecklistItems,
+} from './checklist.js'
+
 // API Response types
 export interface ApiResponse<T> {
   data: T

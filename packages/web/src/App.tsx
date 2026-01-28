@@ -12,10 +12,12 @@ import { QuickCreateModal } from './components/QuickCreateModal'
 import { CreateProjectModal } from './components/CreateProjectModal'
 import { IssueDetailModal } from './components/IssueDetailModal'
 import { Settings } from './components/Settings'
+import { CommandPalette } from './components/CommandPalette'
+import { KeyboardShortcutsHelp } from './components/KeyboardShortcutsHelp'
+import { KeyboardProvider, useKeyboardContext } from './contexts/KeyboardContext'
 import { useStore } from './stores/useStore'
 import { useSettingsStore } from './stores/useSettingsStore'
 import { useEffect } from 'react'
-import { cn } from './lib/utils'
 
 // Configure QueryClient with aggressive caching for snappy UI
 const queryClient = new QueryClient({
@@ -32,8 +34,26 @@ const queryClient = new QueryClient({
 })
 
 function AppContent() {
-  const { viewMode, setQuickCreateOpen, setViewMode, settingsOpen, setSettingsOpen, setSidebarOpen } = useStore()
-  const { theme, accentColor, shortcutsEnabled } = useSettingsStore()
+  const { viewMode, setQuickCreateOpen, setSidebarOpen, setActiveIssueId } = useStore()
+  const { theme, accentColor } = useSettingsStore()
+  
+  // Keyboard context for modals
+  const {
+    isCommandPaletteOpen,
+    setCommandPaletteOpen,
+    isShortcutsHelpOpen,
+    setShortcutsHelpOpen,
+    isQuickCreateOpen,
+    isSettingsOpen,
+    setSettingsOpen,
+  } = useKeyboardContext()
+
+  // Sync keyboard context with store for QuickCreateModal
+  useEffect(() => {
+    if (isQuickCreateOpen) {
+      setQuickCreateOpen(true)
+    }
+  }, [isQuickCreateOpen, setQuickCreateOpen])
 
   // Auto-collapse sidebar on small screens
   useEffect(() => {
@@ -51,16 +71,14 @@ function AppContent() {
     return () => mediaQuery.removeEventListener('change', handleResize)
   }, [setSidebarOpen])
 
-  // Apply theme and accent color
+  // Apply theme
   useEffect(() => {
     const root = document.documentElement
     
-    // Theme
     if (theme === 'system') {
       const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches
       root.classList.toggle('dark', systemDark)
       
-      // Listen for system theme changes
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
       const handler = (e: MediaQueryListEvent) => root.classList.toggle('dark', e.matches)
       mediaQuery.addEventListener('change', handler)
@@ -75,54 +93,12 @@ function AppContent() {
     document.documentElement.setAttribute('data-accent', accentColor)
   }, [accentColor])
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    if (!shortcutsEnabled) return
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger shortcuts when typing in inputs
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return
-      }
-
-      // Cmd/Ctrl + K for quick create
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault()
-        setQuickCreateOpen(true)
-      }
-
-      // Cmd/Ctrl + , for settings
-      if ((e.metaKey || e.ctrlKey) && e.key === ',') {
-        e.preventDefault()
-        setSettingsOpen(true)
-      }
-
-      // Cmd/Ctrl + 1/2/3 for view switching
-      if ((e.metaKey || e.ctrlKey) && e.key === '1') {
-        e.preventDefault()
-        setViewMode('board')
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key === '2') {
-        e.preventDefault()
-        setViewMode('list')
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key === '3') {
-        e.preventDefault()
-        setViewMode('timeline')
-      }
-
-      // Escape to close modals
-      if (e.key === 'Escape') {
-        setSettingsOpen(false)
-        setQuickCreateOpen(false)
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [shortcutsEnabled, setQuickCreateOpen, setSettingsOpen, setViewMode])
-
   const { homeBackground } = useSettingsStore()
+
+  // Handle opening issue from command palette
+  const handleOpenIssue = (issueId: string) => {
+    setActiveIssueId(issueId)
+  }
 
   return (
     <div className="h-screen p-3 relative">
@@ -160,19 +136,52 @@ function AppContent() {
         </div>
       </div>
 
+      {/* Modals */}
       <QuickCreateModal />
       <CreateProjectModal />
       <IssueDetailModal />
-      <Settings open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <Settings open={isSettingsOpen} onClose={() => setSettingsOpen(false)} />
+      
+      {/* Keyboard-triggered modals */}
+      <CommandPalette
+        open={isCommandPaletteOpen}
+        onOpenChange={setCommandPaletteOpen}
+        onQuickCreate={() => {
+          setCommandPaletteOpen(false)
+          setQuickCreateOpen(true)
+        }}
+        onOpenSettings={() => {
+          setCommandPaletteOpen(false)
+          setSettingsOpen(true)
+        }}
+        onOpenShortcutsHelp={() => {
+          setCommandPaletteOpen(false)
+          setShortcutsHelpOpen(true)
+        }}
+        onOpenIssue={handleOpenIssue}
+      />
+      <KeyboardShortcutsHelp
+        open={isShortcutsHelpOpen}
+        onOpenChange={setShortcutsHelpOpen}
+      />
+      
       <Toaster position="bottom-right" />
     </div>
+  )
+}
+
+function AppWithKeyboard() {
+  return (
+    <KeyboardProvider>
+      <AppContent />
+    </KeyboardProvider>
   )
 }
 
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppContent />
+      <AppWithKeyboard />
     </QueryClientProvider>
   )
 }

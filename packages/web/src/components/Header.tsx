@@ -11,7 +11,8 @@ import {
   LayoutGrid, 
   List, 
   GanttChart,
-  Plus
+  Plus,
+  Search,
 } from 'lucide-react'
 
 export function Header() {
@@ -29,8 +30,20 @@ export function Header() {
   return (
     <TooltipProvider delayDuration={0}>
       <header className="h-14 px-4 flex items-center justify-between">
-        {/* Left: Spacer for balance */}
-        <div className="w-24 hidden sm:block" />
+        {/* Left: Search hint */}
+        <div className="w-32 hidden sm:flex items-center">
+          <button
+            onClick={() => {
+              // Trigger command palette via keyboard event
+              window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))
+            }}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+          >
+            <Search className="h-4 w-4" />
+            <span className="hidden md:inline">Search</span>
+            <kbd className="hidden md:inline px-1.5 py-0.5 text-xs bg-muted rounded">⌘K</kbd>
+          </button>
+        </div>
 
         {/* Center: View switcher */}
         <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
@@ -60,16 +73,17 @@ export function Header() {
           />
         </div>
 
-        {/* Right: Actions */}
-        <div className="flex items-center gap-2">
+        {/* Right: Create button */}
+        <div className="flex items-center gap-1">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button size="icon" onClick={() => setQuickCreateOpen(true)}>
-                <Plus className="h-5 w-5" />
+              <Button size="sm" onClick={() => setQuickCreateOpen(true)} className="gap-1.5">
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Create</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Create Issue (⌘K)</p>
+              <p>Create Issue (⌘N)</p>
             </TooltipContent>
           </Tooltip>
         </div>

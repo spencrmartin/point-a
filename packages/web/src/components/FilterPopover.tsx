@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useStore } from '@/stores/useStore'
+import { useSavedViewsStore, SAVED_VIEW_ICONS, type SavedViewIcon } from '@/stores/useSavedViewsStore'
 import { Button } from './ui/button'
+import { Input } from './ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
 import { 
@@ -16,9 +18,28 @@ import {
   Wrench,
   CheckSquare,
   Layers,
-  Check
+  Check,
+  Bookmark,
+  Plus,
+  Flame,
+  Zap,
+  Rocket,
+  Star,
+  Heart,
+  Flag,
+  Target,
+  Clock,
+  Calendar,
+  Grid,
+  List,
+  CheckCircle,
+  AlertTriangle,
+  Eye,
+  Archive,
+  type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 
 const STATUS_OPTIONS = [
   { value: 'backlog', label: 'Backlog', icon: Circle, color: 'text-gray-400' },
@@ -45,9 +66,38 @@ const TYPE_OPTIONS = [
   { value: 'epic', label: 'Epic', icon: Layers, color: 'text-indigo-500' },
 ]
 
+// Map icon names to Lucide components for the icon picker
+const iconMap: Record<SavedViewIcon, LucideIcon> = {
+  'flame': Flame,
+  'zap': Zap,
+  'bug': Bug,
+  'rocket': Rocket,
+  'star': Star,
+  'heart': Heart,
+  'bookmark': Bookmark,
+  'flag': Flag,
+  'target': Target,
+  'clock': Clock,
+  'calendar': Calendar,
+  'filter': Filter,
+  'layers': Layers,
+  'grid': Grid,
+  'list': List,
+  'check-circle': CheckCircle,
+  'alert-circle': AlertCircle,
+  'alert-triangle': AlertTriangle,
+  'eye': Eye,
+  'archive': Archive,
+}
+
 export function FilterPopover() {
   const [open, setOpen] = useState(false)
-  const { filters, setFilters, clearFilters, hasActiveFilters } = useStore()
+  const [showSaveForm, setShowSaveForm] = useState(false)
+  const [viewName, setViewName] = useState('')
+  const [viewIcon, setViewIcon] = useState<SavedViewIcon>('bookmark')
+  
+  const { filters, setFilters, clearFilters, hasActiveFilters, currentProjectId, displayOptions } = useStore()
+  const { addView } = useSavedViewsStore()
   const activeFilters = hasActiveFilters()
 
   const toggleFilter = (type: 'status' | 'priority' | 'type', value: string) => {
@@ -58,6 +108,31 @@ export function FilterPopover() {
       setFilters({ [type]: [...current, value] })
     }
   }
+
+  const handleSaveView = () => {
+    if (!viewName.trim()) {
+      toast.error('Please enter a view name')
+      return
+    }
+    
+    addView({
+      name: viewName.trim(),
+      icon: viewIcon,
+      filters: { ...filters },
+      projectId: currentProjectId,
+      groupBy: displayOptions.groupBy,
+      sortBy: displayOptions.sortBy,
+      sortOrder: displayOptions.sortOrder,
+    })
+    
+    toast.success(`View "${viewName}" saved!`)
+    setViewName('')
+    setViewIcon('bookmark')
+    setShowSaveForm(false)
+  }
+  
+  // Get the current icon component
+  const CurrentIcon = iconMap[viewIcon] || Bookmark
 
   const activeCount = filters.status.length + filters.priority.length + filters.type.length + (filters.assignee ? 1 : 0)
 
@@ -170,6 +245,87 @@ export function FilterPopover() {
               })}
             </div>
           </div>
+
+          {/* Save as View */}
+          {activeFilters && (
+            <div className="pt-2 border-t">
+              {!showSaveForm ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => setShowSaveForm(true)}
+                >
+                  <Bookmark className="h-4 w-4 mr-2" />
+                  Save as View
+                </Button>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button className="p-2 hover:bg-muted rounded border">
+                          <CurrentIcon className="h-4 w-4" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-2" align="start">
+                        <div className="grid grid-cols-5 gap-1">
+                          {SAVED_VIEW_ICONS.map((iconName) => {
+                            const IconComponent = iconMap[iconName]
+                            return (
+                              <button
+                                key={iconName}
+                                onClick={() => setViewIcon(iconName)}
+                                className={cn(
+                                  'p-2 rounded hover:bg-muted',
+                                  viewIcon === iconName && 'bg-primary/10'
+                                )}
+                                title={iconName}
+                              >
+                                <IconComponent className="h-4 w-4" />
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                    <Input
+                      placeholder="View name..."
+                      value={viewName}
+                      onChange={(e) => setViewName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSaveView()
+                        if (e.key === 'Escape') setShowSaveForm(false)
+                      }}
+                      className="flex-1"
+                      autoFocus
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => {
+                        setShowSaveForm(false)
+                        setViewName('')
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="flex-1"
+                      onClick={handleSaveView}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Save
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </PopoverContent>
       </Popover>
