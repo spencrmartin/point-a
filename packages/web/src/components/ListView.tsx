@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { useStore } from '@/stores/useStore'
 import { useIssues, useUpdateIssue } from '@/hooks/useIssues'
 import { cn, formatRelativeDate } from '@/lib/utils'
@@ -58,6 +58,10 @@ export function ListView() {
   const [sortField, setSortField] = useState<SortField>(displayOptions.sortBy === 'dueDate' ? 'createdAt' : displayOptions.sortBy as SortField)
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(displayOptions.sortOrder)
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['backlog', 'todo', 'in_progress', 'in_review']))
+  
+  // Keyboard navigation state
+  const [focusedIndex, setFocusedIndex] = useState<number>(-1)
+  const listRef = useRef<HTMLDivElement>(null)
 
   // Map display options groupBy to list view groupBy
   const groupBy = displayOptions.groupBy === 'none' ? 'none' : 
@@ -156,6 +160,81 @@ export function ListView() {
       selectAllIssues(issues.map(i => i.id))
     }
   }
+
+  // Get flat list of visible issues for keyboard navigation
+  const visibleIssues = useMemo(() => {
+    const result: IssueWithRelations[] = []
+    Object.entries(groupedIssues).forEach(([group, groupIssues]) => {
+      if (groupBy === 'none' || expandedGroups.has(group)) {
+        result.push(...groupIssues)
+      }
+    })
+    return result
+  }, [groupedIssues, groupBy, expandedGroups])
+
+  // Keyboard navigation
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    // Don't handle if typing in input
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) {
+      return
+    }
+
+    // Don't handle if meta/ctrl key is pressed (let global shortcuts handle those)
+    if (e.metaKey || e.ctrlKey) {
+      return
+    }
+
+    const focusedIssue = focusedIndex >= 0 ? visibleIssues[focusedIndex] : null
+
+    switch (e.key.toLowerCase()) {
+      case 'j': // Move down
+        e.preventDefault()
+        setFocusedIndex(prev => Math.min(prev + 1, visibleIssues.length - 1))
+        break
+      case 'k': // Move up
+        e.preventDefault()
+        setFocusedIndex(prev => Math.max(prev - 1, 0))
+        break
+      case 'enter': // Open issue
+        if (focusedIssue) {
+          e.preventDefault()
+          setActiveIssueId(focusedIssue.id)
+        }
+        break
+      case 'x': // Toggle selection
+        if (focusedIssue) {
+          e.preventDefault()
+          toggleIssueSelection(focusedIssue.id)
+        }
+        break
+      case 'escape': // Clear focus
+        e.preventDefault()
+        setFocusedIndex(-1)
+        break
+    }
+  }, [focusedIndex, visibleIssues, setActiveIssueId, toggleIssueSelection])
+
+  // Attach keyboard listener
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleKeyDown])
+
+  // Scroll focused item into view
+  useEffect(() => {
+    if (focusedIndex >= 0 && listRef.current) {
+      const rows = listRef.current.querySelectorAll('[data-issue-row]')
+      const focusedRow = rows[focusedIndex] as HTMLElement
+      if (focusedRow) {
+        focusedRow.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      }
+    }
+  }, [focusedIndex])
+
+  // Reset focus when issues change
+  useEffect(() => {
+    setFocusedIndex(-1)
+  }, [currentProjectId])
 
   // Show skeleton only on initial load
   if (isLoading && !data) {
@@ -259,7 +338,7 @@ export function ListView() {
         </div>
 
         {/* Body */}
-        <div>
+        <div ref={listRef}>
           {Object.entries(groupedIssues).map(([group, groupIssues]) => (
             <div key={group}>
               {/* Group Header */}
@@ -296,17 +375,21 @@ export function ListView() {
               {/* Group Issues */}
               {(groupBy === 'none' || expandedGroups.has(group)) && (
                 <div>
-                  {groupIssues.map((issue) => (
-                    <IssueRow
-                      key={issue.id}
-                      issue={issue}
-                      isSelected={selectedIssueIds.has(issue.id)}
-                      onSelect={() => toggleIssueSelection(issue.id)}
-                      onClick={() => setActiveIssueId(issue.id)}
-                      onStatusChange={(status) => updateIssue.mutate({ id: issue.id, data: { status } })}
-                      onPriorityChange={(priority) => updateIssue.mutate({ id: issue.id, data: { priority } })}
-                    />
-                  ))}
+                  {groupIssues.map((issue) => {
+                    const globalIndex = visibleIssues.findIndex(i => i.id === issue.id)
+                    return (
+                      <IssueRow
+                        key={issue.id}
+                        issue={issue}
+                        isSelected={selectedIssueIds.has(issue.id)}
+                        isFocused={focusedIndex === globalIndex}
+                        onSelect={() => toggleIssueSelection(issue.id)}
+                        onClick={() => setActiveIssueId(issue.id)}
+                        onStatusChange={(status) => updateIssue.mutate({ id: issue.id, data: { status } })}
+                        onPriorityChange={(priority) => updateIssue.mutate({ id: issue.id, data: { priority } })}
+                      />
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -326,6 +409,7 @@ export function ListView() {
 function IssueRow({
   issue,
   isSelected,
+  isFocused,
   onSelect,
   onClick,
   onStatusChange,
@@ -333,6 +417,7 @@ function IssueRow({
 }: {
   issue: IssueWithRelations
   isSelected: boolean
+  isFocused: boolean
   onSelect: () => void
   onClick: () => void
   onStatusChange: (status: IssueStatus) => void
@@ -342,9 +427,11 @@ function IssueRow({
 
   return (
     <div
+      data-issue-row
       className={cn(
-        'flex items-center px-3 py-2 border-b hover:bg-muted/50 cursor-pointer group',
-        isSelected && 'bg-primary/5'
+        'flex items-center px-3 py-2 border-b hover:bg-muted/50 cursor-pointer group transition-colors',
+        isSelected && 'bg-primary/5',
+        isFocused && 'bg-primary/10 ring-2 ring-primary/50 ring-inset'
       )}
     >
       <div className="w-8 flex items-center justify-center">
