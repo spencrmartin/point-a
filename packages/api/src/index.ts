@@ -3,6 +3,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { projects, issues, cycles, labels } from './routes/index.js'
+import { commentRoutes } from './routes/comment.routes.js'
 
 const app = new Hono()
 
@@ -18,6 +19,7 @@ app.route('/api/projects', projects)
 app.route('/api/issues', issues)
 app.route('/api/cycles', cycles)
 app.route('/api/labels', labels)
+app.route('/api', commentRoutes)
 
 // 404 handler
 app.notFound((c) => c.json({ error: 'Not Found', message: 'Route not found' }, 404))
