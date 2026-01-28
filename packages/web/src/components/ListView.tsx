@@ -6,6 +6,7 @@ import { Button } from './ui/button'
 import { ListRowSkeleton } from './Skeleton'
 import { FilterPopover } from './FilterPopover'
 import { DisplayPopover } from './DisplayPopover'
+import { MoreMenu } from './MoreMenu'
 import type { IssueWithRelations, IssueStatus, IssuePriority } from '@point-a/shared'
 import {
   ChevronDown,
@@ -189,8 +190,13 @@ export function ListView() {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <FilterPopover />
-          <DisplayPopover />
+          {/* Desktop: Show individual buttons */}
+          <div className="hidden sm:flex items-center gap-2">
+            <FilterPopover />
+            <DisplayPopover />
+          </div>
+          {/* Mobile: Show More menu */}
+          <MoreMenu />
         </div>
       </div>
 

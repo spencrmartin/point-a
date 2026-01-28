@@ -37,6 +37,7 @@ export const issues = sqliteTable('issues', {
   sortOrder: integer('sort_order').default(0),
   createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
   updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`),
+  completedAt: text('completed_at'),
 })
 
 // Cycles (Sprints) table

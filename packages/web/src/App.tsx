@@ -8,6 +8,7 @@ import { ListView } from './components/ListView'
 import { TimelineView } from './components/TimelineView'
 import { QuickCreateModal } from './components/QuickCreateModal'
 import { CreateProjectModal } from './components/CreateProjectModal'
+import { IssueDetailModal } from './components/IssueDetailModal'
 import { Settings } from './components/Settings'
 import { useStore } from './stores/useStore'
 import { useSettingsStore } from './stores/useSettingsStore'
@@ -29,8 +30,24 @@ const queryClient = new QueryClient({
 })
 
 function AppContent() {
-  const { viewMode, setQuickCreateOpen, setViewMode, settingsOpen, setSettingsOpen } = useStore()
+  const { viewMode, setQuickCreateOpen, setViewMode, settingsOpen, setSettingsOpen, setSidebarOpen } = useStore()
   const { theme, accentColor, shortcutsEnabled } = useSettingsStore()
+
+  // Auto-collapse sidebar on small screens
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)')
+    
+    const handleResize = (e: MediaQueryListEvent | MediaQueryList) => {
+      setSidebarOpen(!e.matches)
+    }
+    
+    // Set initial state
+    handleResize(mediaQuery)
+    
+    // Listen for changes
+    mediaQuery.addEventListener('change', handleResize)
+    return () => mediaQuery.removeEventListener('change', handleResize)
+  }, [setSidebarOpen])
 
   // Apply theme and accent color
   useEffect(() => {
@@ -141,6 +158,7 @@ function AppContent() {
 
       <QuickCreateModal />
       <CreateProjectModal />
+      <IssueDetailModal />
       <Settings open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <Toaster position="bottom-right" />
     </div>

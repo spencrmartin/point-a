@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useStore, type DisplayOptions } from '@/stores/useStore'
 import { Button } from './ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
 import { 
   SlidersHorizontal,
   ArrowUpDown,
@@ -35,14 +36,22 @@ export function DisplayPopover() {
   const { displayOptions, setDisplayOptions } = useStore()
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button variant="outline" size="sm">
-          <SlidersHorizontal className="h-4 w-4 mr-2" />
-          Display
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-72 p-0" align="end">
+    <TooltipProvider delayDuration={0}>
+      <Popover open={open} onOpenChange={setOpen}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="px-2 sm:px-3">
+                <SlidersHorizontal className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Display</span>
+              </Button>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent className="sm:hidden">
+            <p>Display</p>
+          </TooltipContent>
+        </Tooltip>
+        <PopoverContent className="w-72 p-0" align="end">
         <div className="p-3 border-b">
           <span className="font-medium">Display options</span>
         </div>
@@ -175,6 +184,7 @@ export function DisplayPopover() {
           </div>
         </div>
       </PopoverContent>
-    </Popover>
+      </Popover>
+    </TooltipProvider>
   )
 }

@@ -133,6 +133,15 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
           uri,
           mimeType: MCP_APPS_MIME_TYPE,
           text: issueViewTemplate,
+          _meta: {
+            ui: {
+              prefersBorder: true,
+              csp: {
+                connectDomains: [],
+                resourceDomains: [],
+              },
+            },
+          },
         },
       ],
     }
@@ -231,6 +240,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ['id'],
         },
+        _meta: {
+          ui: {
+            resourceUri: MCP_APP_ISSUE_URI,
+          },
+        },
       },
       {
         name: 'create_issue',
@@ -276,6 +290,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ['title', 'projectId'],
         },
+        _meta: {
+          ui: {
+            resourceUri: MCP_APP_ISSUE_URI,
+          },
+        },
       },
       {
         name: 'update_issue',
@@ -320,6 +339,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
           },
           required: ['id'],
+        },
+        _meta: {
+          ui: {
+            resourceUri: MCP_APP_ISSUE_URI,
+          },
         },
       },
       {
@@ -548,13 +572,31 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           }
         }
 
+        // Get project info for the structured content
+        const project = await repo.getProject(issue.projectId)
+
         return {
           content: [
             {
               type: 'text',
-              text: JSON.stringify(issue, null, 2),
+              text: 'Here is the issue.',
             },
           ],
+          structuredContent: {
+            id: issue.id,
+            identifier: issue.identifier,
+            title: issue.title,
+            description: issue.description,
+            status: issue.status,
+            priority: issue.priority,
+            type: issue.type,
+            assignee: issue.assignee,
+            dueDate: issue.dueDate,
+            createdAt: issue.createdAt,
+            updatedAt: issue.updatedAt,
+            labels: issue.labels || [],
+            project: project ? { key: project.key, name: project.name } : null,
+          },
         }
       }
 
@@ -585,9 +627,24 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           content: [
             {
               type: 'text',
-              text: JSON.stringify({ success: true, issue }, null, 2),
+              text: 'Successfully created the issue.',
             },
           ],
+          structuredContent: {
+            id: issue.id,
+            identifier: issue.identifier,
+            title: issue.title,
+            description: issue.description,
+            status: issue.status,
+            priority: issue.priority,
+            type: issue.type,
+            assignee: issue.assignee,
+            dueDate: issue.dueDate,
+            createdAt: issue.createdAt,
+            updatedAt: issue.updatedAt,
+            labels: [],
+            project: { key: project.key, name: project.name },
+          },
         }
       }
 
@@ -603,13 +660,33 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
 
         const issue = await repo.updateIssue(id, updates)
+        
+        // Get full issue with labels and project info
+        const fullIssue = await repo.getIssueWithLabels(id)
+        const project = await repo.getProject(issue.projectId)
+
         return {
           content: [
             {
               type: 'text',
-              text: JSON.stringify({ success: true, issue }, null, 2),
+              text: 'Successfully updated the issue.',
             },
           ],
+          structuredContent: {
+            id: issue.id,
+            identifier: issue.identifier,
+            title: issue.title,
+            description: issue.description,
+            status: issue.status,
+            priority: issue.priority,
+            type: issue.type,
+            assignee: issue.assignee,
+            dueDate: issue.dueDate,
+            createdAt: issue.createdAt,
+            updatedAt: issue.updatedAt,
+            labels: fullIssue?.labels || [],
+            project: project ? { key: project.key, name: project.name } : null,
+          },
         }
       }
 

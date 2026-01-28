@@ -46,90 +46,177 @@
       opacity: 0.6;
     }
     
-    .content-wrapper { display: none; }
-    .content-wrapper.is-ready { display: block; }
-    .loading.is-hidden { display: none; }
+    /* Content (hidden until loaded) */
+    .content-wrapper {
+      display: none;
+    }
     
-    /* Issue header */
+    .content-wrapper.is-ready {
+      display: block;
+    }
+    
+    .loading.is-hidden {
+      display: none;
+    }
+    
+    /* Header with identifier and badges */
     .issue-header {
       display: flex;
       align-items: flex-start;
       gap: 12px;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
     }
     
-    .issue-identifier {
+    .identifier {
+      font-family: 'SF Mono', Monaco, 'Courier New', monospace;
       font-size: 0.875rem;
       font-weight: 600;
-      font-family: ui-monospace, monospace;
       padding: 4px 8px;
-      border-radius: 4px;
+      border-radius: 6px;
     }
     
-    body.light .issue-identifier { background: #e5e5e7; color: #6e6e73; }
-    body.dark .issue-identifier { background: #3d3d3f; color: #a1a1a6; }
+    body.light .identifier { background: #f5f5f7; color: #6e6e73; }
+    body.dark .identifier { background: #2d2d2f; color: #a1a1a6; }
     
-    h1 {
-      font-size: 1.25rem;
-      font-weight: 600;
-      line-height: 1.3;
-      flex: 1;
-    }
-    
-    /* Badges row */
-    .badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-    
+    /* Badge styles */
     .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
       font-size: 0.75rem;
       font-weight: 500;
       padding: 4px 10px;
       border-radius: 12px;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
+      text-transform: capitalize;
+    }
+    
+    .badge-icon {
+      width: 12px;
+      height: 12px;
     }
     
     /* Status colors */
-    .status-backlog { background: #6b728020; color: #6b7280; }
-    .status-todo { background: #3b82f620; color: #3b82f6; }
-    .status-in_progress { background: #f59e0b20; color: #f59e0b; }
-    .status-in_review { background: #8b5cf620; color: #8b5cf6; }
-    .status-done { background: #22c55e20; color: #22c55e; }
-    .status-cancelled { background: #ef444420; color: #ef4444; }
+    .status-backlog { background: #e5e5e7; color: #6e6e73; }
+    .status-todo { background: #dbeafe; color: #1d4ed8; }
+    .status-in_progress { background: #fef3c7; color: #b45309; }
+    .status-in_review { background: #ede9fe; color: #7c3aed; }
+    .status-done { background: #d1fae5; color: #047857; }
+    .status-cancelled { background: #fee2e2; color: #dc2626; }
+    
+    body.dark .status-backlog { background: #3d3d3f; color: #a1a1a6; }
+    body.dark .status-todo { background: #1e3a5f; color: #60a5fa; }
+    body.dark .status-in_progress { background: #422006; color: #fbbf24; }
+    body.dark .status-in_review { background: #2e1065; color: #a78bfa; }
+    body.dark .status-done { background: #064e3b; color: #34d399; }
+    body.dark .status-cancelled { background: #450a0a; color: #f87171; }
     
     /* Priority colors */
-    .priority-urgent { background: #ef444420; color: #ef4444; }
-    .priority-high { background: #f9731620; color: #f97316; }
-    .priority-medium { background: #eab30820; color: #eab308; }
-    .priority-low { background: #3b82f620; color: #3b82f6; }
-    .priority-none { background: #6b728020; color: #6b7280; }
+    .priority-urgent { background: #fee2e2; color: #dc2626; }
+    .priority-high { background: #ffedd5; color: #ea580c; }
+    .priority-medium { background: #fef3c7; color: #ca8a04; }
+    .priority-low { background: #dbeafe; color: #2563eb; }
+    .priority-none { background: #f3f4f6; color: #6b7280; }
+    
+    body.dark .priority-urgent { background: #450a0a; color: #f87171; }
+    body.dark .priority-high { background: #431407; color: #fb923c; }
+    body.dark .priority-medium { background: #422006; color: #facc15; }
+    body.dark .priority-low { background: #1e3a5f; color: #60a5fa; }
+    body.dark .priority-none { background: #374151; color: #9ca3af; }
     
     /* Type badge */
-    .type-bug { background: #ef444420; color: #ef4444; }
-    .type-feature { background: #8b5cf620; color: #8b5cf6; }
-    .type-improvement { background: #3b82f620; color: #3b82f6; }
-    .type-task { background: #6b728020; color: #6b7280; }
-    .type-epic { background: #6366f120; color: #6366f1; }
+    .type-badge {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    
+    body.light .type-badge { background: #e5e5e7; color: #6e6e73; }
+    body.dark .type-badge { background: #3d3d3f; color: #a1a1a6; }
+    
+    .type-bug { background: #fee2e2 !important; color: #dc2626 !important; }
+    .type-feature { background: #dbeafe !important; color: #2563eb !important; }
+    .type-improvement { background: #d1fae5 !important; color: #047857 !important; }
+    .type-epic { background: #ede9fe !important; color: #7c3aed !important; }
+    
+    body.dark .type-bug { background: #450a0a !important; color: #f87171 !important; }
+    body.dark .type-feature { background: #1e3a5f !important; color: #60a5fa !important; }
+    body.dark .type-improvement { background: #064e3b !important; color: #34d399 !important; }
+    body.dark .type-epic { background: #2e1065 !important; color: #a78bfa !important; }
+    
+    /* Title */
+    h1 {
+      font-size: 1.375rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      line-height: 1.3;
+    }
     
     /* Description */
     .description {
-      font-size: 0.95rem;
-      margin-bottom: 16px;
+      font-size: 0.9375rem;
+      margin-bottom: 20px;
       white-space: pre-wrap;
       word-wrap: break-word;
-      padding: 12px;
-      border-radius: 8px;
+      line-height: 1.6;
     }
     
-    body.light .description { background: #f5f5f7; }
-    body.dark .description { background: #2d2d2f; }
+    body.light .description { color: #3d3d3f; }
+    body.dark .description { color: #d1d1d6; }
     
-    .description:empty { display: none; }
+    /* Meta section */
+    .meta-section {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding-top: 16px;
+      border-top: 1px solid;
+      margin-bottom: 16px;
+    }
+    
+    body.light .meta-section { border-color: #e5e5e7; }
+    body.dark .meta-section { border-color: #3d3d3f; }
+    
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    
+    .meta-label {
+      font-size: 0.6875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      opacity: 0.6;
+    }
+    
+    .meta-value {
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    
+    /* Assignee */
+    .assignee {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .assignee-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    body.light .assignee-avatar { background: #dbeafe; color: #1d4ed8; }
+    body.dark .assignee-avatar { background: #1e3a5f; color: #60a5fa; }
     
     /* Labels */
     .labels {
@@ -141,42 +228,31 @@
     
     .label {
       font-size: 0.75rem;
-      padding: 2px 8px;
+      padding: 2px 10px;
       border-radius: 12px;
+      font-weight: 500;
     }
     
-    /* Meta info */
-    .meta {
+    /* Project info */
+    .project-info {
       font-size: 0.75rem;
       opacity: 0.6;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
+      margin-bottom: 8px;
     }
     
-    .meta-item {
-      display: flex;
-      align-items: center;
-      gap: 4px;
+    /* Timestamps */
+    .timestamps {
+      font-size: 0.75rem;
+      opacity: 0.5;
     }
     
-    /* Project badge */
-    .project-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.875rem;
-      margin-bottom: 12px;
+    /* Due date warning */
+    .due-date.overdue {
+      color: #dc2626;
     }
     
-    .project-icon {
-      width: 20px;
-      height: 20px;
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
+    body.dark .due-date.overdue {
+      color: #f87171;
     }
   </style>
 </head>
@@ -184,44 +260,109 @@
   <!-- Loading state -->
   <div class="loading" id="loading">
     <div class="spinner"></div>
-    <div class="loading-text">Loading issue...</div>
+    <div class="loading-text">Loading issue details...</div>
   </div>
 
-  <!-- Content -->
+  <!-- Content (populated from tool result) -->
   <div class="content-wrapper" id="content">
-    <div class="project-badge" id="project-badge"></div>
+    <div class="project-info" id="project-info"></div>
     
     <div class="issue-header">
-      <span class="issue-identifier" id="issue-identifier"></span>
-      <h1 id="issue-title"></h1>
+      <span class="identifier" id="identifier"></span>
+      <span class="type-badge" id="type-badge"></span>
+      <span class="badge" id="status-badge"></span>
+      <span class="badge" id="priority-badge"></span>
     </div>
     
-    <div class="badges" id="badges"></div>
+    <h1 id="title"></h1>
     
     <div class="labels" id="labels"></div>
     
-    <div class="description" id="description"></div>
+    <p class="description" id="description"></p>
     
-    <div class="meta" id="meta"></div>
+    <div class="meta-section">
+      <div class="meta-item" id="assignee-section" style="display: none;">
+        <span class="meta-label">Assignee</span>
+        <div class="assignee">
+          <span class="assignee-avatar" id="assignee-avatar"></span>
+          <span class="meta-value" id="assignee-name"></span>
+        </div>
+      </div>
+      
+      <div class="meta-item" id="due-date-section" style="display: none;">
+        <span class="meta-label">Due Date</span>
+        <span class="meta-value due-date" id="due-date"></span>
+      </div>
+      
+      <div class="meta-item" id="created-section">
+        <span class="meta-label">Created</span>
+        <span class="meta-value" id="created-at"></span>
+      </div>
+      
+      <div class="meta-item" id="updated-section" style="display: none;">
+        <span class="meta-label">Updated</span>
+        <span class="meta-value" id="updated-at"></span>
+      </div>
+    </div>
   </div>
 
   <script>
+    // MCP App client with tool result handling
     (function() {
       'use strict';
       
       const pendingRequests = new Map();
       let requestId = 0;
       
+      // DOM elements
       const loadingEl = document.getElementById('loading');
       const contentEl = document.getElementById('content');
-      const projectBadgeEl = document.getElementById('project-badge');
-      const identifierEl = document.getElementById('issue-identifier');
-      const titleEl = document.getElementById('issue-title');
-      const badgesEl = document.getElementById('badges');
+      const projectInfoEl = document.getElementById('project-info');
+      const identifierEl = document.getElementById('identifier');
+      const typeBadgeEl = document.getElementById('type-badge');
+      const statusBadgeEl = document.getElementById('status-badge');
+      const priorityBadgeEl = document.getElementById('priority-badge');
+      const titleEl = document.getElementById('title');
       const labelsEl = document.getElementById('labels');
       const descriptionEl = document.getElementById('description');
-      const metaEl = document.getElementById('meta');
+      const assigneeSectionEl = document.getElementById('assignee-section');
+      const assigneeAvatarEl = document.getElementById('assignee-avatar');
+      const assigneeNameEl = document.getElementById('assignee-name');
+      const dueDateSectionEl = document.getElementById('due-date-section');
+      const dueDateEl = document.getElementById('due-date');
+      const createdAtEl = document.getElementById('created-at');
+      const updatedSectionEl = document.getElementById('updated-section');
+      const updatedAtEl = document.getElementById('updated-at');
       
+      // Status display names and icons
+      const statusDisplay = {
+        backlog: { name: 'Backlog', icon: '○' },
+        todo: { name: 'Todo', icon: '◔' },
+        in_progress: { name: 'In Progress', icon: '◑' },
+        in_review: { name: 'In Review', icon: '◕' },
+        done: { name: 'Done', icon: '●' },
+        cancelled: { name: 'Cancelled', icon: '⊘' }
+      };
+      
+      // Priority display
+      const priorityDisplay = {
+        urgent: { name: 'Urgent', icon: '⚡' },
+        high: { name: 'High', icon: '↑' },
+        medium: { name: 'Medium', icon: '→' },
+        low: { name: 'Low', icon: '↓' },
+        none: { name: 'None', icon: '−' }
+      };
+      
+      // Type display
+      const typeDisplay = {
+        bug: '🐛 Bug',
+        feature: '✨ Feature',
+        improvement: '📈 Improvement',
+        task: '📋 Task',
+        epic: '🎯 Epic'
+      };
+      
+      // Format date
       function formatDate(isoString) {
         if (!isoString) return '';
         const date = new Date(isoString);
@@ -232,155 +373,190 @@
         });
       }
       
+      // Format date with time
+      function formatDateTime(isoString) {
+        if (!isoString) return '';
+        const date = new Date(isoString);
+        return date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      }
+      
+      // Check if date is overdue
+      function isOverdue(isoString) {
+        if (!isoString) return false;
+        const dueDate = new Date(isoString);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return dueDate < today;
+      }
+      
+      // Get initials from name
+      function getInitials(name) {
+        if (!name) return '?';
+        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      }
+      
+      // Populate UI with issue data
       function populateIssue(rawData) {
-        console.log('[point-a-issue-view] populateIssue:', rawData);
+        console.log('[point-a-issue-view] populateIssue called with:', rawData);
         
+        // Handle case where data might be wrapped in structuredContent
         var data = rawData;
         if (rawData && rawData.structuredContent) {
           data = rawData.structuredContent;
         }
         
-        // Project badge
+        console.log('[point-a-issue-view] Using data:', data);
+        
+        // Project info
         if (data.project) {
-          projectBadgeEl.innerHTML = '';
-          var iconSpan = document.createElement('span');
-          iconSpan.className = 'project-icon';
-          iconSpan.style.backgroundColor = (data.project.color || '#6366f1') + '20';
-          iconSpan.style.color = data.project.color || '#6366f1';
-          iconSpan.textContent = data.project.icon || '📋';
-          projectBadgeEl.appendChild(iconSpan);
-          
-          var nameSpan = document.createElement('span');
-          nameSpan.textContent = data.project.name;
-          projectBadgeEl.appendChild(nameSpan);
+          projectInfoEl.textContent = data.project.key + ' • ' + data.project.name;
         }
         
         // Identifier
-        identifierEl.textContent = data.identifier || '';
+        identifierEl.textContent = data.identifier || data.id;
+        
+        // Type badge
+        var type = data.type || 'task';
+        typeBadgeEl.textContent = typeDisplay[type] || type;
+        typeBadgeEl.className = 'type-badge type-' + type;
+        
+        // Status badge
+        var status = data.status || 'backlog';
+        var statusInfo = statusDisplay[status] || { name: status, icon: '○' };
+        statusBadgeEl.innerHTML = '<span>' + statusInfo.icon + '</span> ' + statusInfo.name;
+        statusBadgeEl.className = 'badge status-' + status;
+        
+        // Priority badge
+        var priority = data.priority || 'none';
+        var priorityInfo = priorityDisplay[priority] || { name: priority, icon: '−' };
+        priorityBadgeEl.innerHTML = '<span>' + priorityInfo.icon + '</span> ' + priorityInfo.name;
+        priorityBadgeEl.className = 'badge priority-' + priority;
         
         // Title
         titleEl.textContent = data.title || 'Untitled';
-        document.title = (data.identifier || '') + ' - ' + (data.title || 'Issue');
-        
-        // Badges (status, priority, type)
-        badgesEl.innerHTML = '';
-        
-        if (data.status) {
-          var statusBadge = document.createElement('span');
-          statusBadge.className = 'badge status-' + data.status;
-          statusBadge.textContent = data.status.replace('_', ' ');
-          badgesEl.appendChild(statusBadge);
-        }
-        
-        if (data.priority && data.priority !== 'none') {
-          var priorityBadge = document.createElement('span');
-          priorityBadge.className = 'badge priority-' + data.priority;
-          priorityBadge.textContent = data.priority + ' priority';
-          badgesEl.appendChild(priorityBadge);
-        }
-        
-        if (data.type) {
-          var typeBadge = document.createElement('span');
-          typeBadge.className = 'badge type-' + data.type;
-          typeBadge.textContent = data.type;
-          badgesEl.appendChild(typeBadge);
-        }
+        document.title = (data.identifier || '') + ' ' + (data.title || 'Issue Details');
         
         // Labels
         labelsEl.innerHTML = '';
-        if (data.labels && Array.isArray(data.labels) && data.labels.length > 0) {
-          for (var i = 0; i < data.labels.length; i++) {
-            var label = data.labels[i];
+        var labels = data.labels;
+        if (labels && Array.isArray(labels) && labels.length > 0) {
+          for (var i = 0; i < labels.length; i++) {
+            var label = labels[i];
             var labelSpan = document.createElement('span');
             labelSpan.className = 'label';
-            labelSpan.style.backgroundColor = (label.color || '#6b7280') + '20';
-            labelSpan.style.color = label.color || '#6b7280';
-            labelSpan.textContent = label.name;
+            labelSpan.textContent = label.name || label;
+            if (label.color) {
+              labelSpan.style.backgroundColor = label.color + '20';
+              labelSpan.style.color = label.color;
+            }
             labelsEl.appendChild(labelSpan);
           }
         }
         
         // Description
-        descriptionEl.textContent = data.description || '';
+        descriptionEl.textContent = data.description || 'No description provided.';
         
-        // Meta info
-        metaEl.innerHTML = '';
-        
+        // Assignee
         if (data.assignee) {
-          var assigneeMeta = document.createElement('span');
-          assigneeMeta.className = 'meta-item';
-          assigneeMeta.textContent = '👤 ' + data.assignee;
-          metaEl.appendChild(assigneeMeta);
+          assigneeSectionEl.style.display = 'flex';
+          assigneeAvatarEl.textContent = getInitials(data.assignee);
+          assigneeNameEl.textContent = data.assignee;
+        } else {
+          assigneeSectionEl.style.display = 'none';
         }
         
+        // Due date
         if (data.dueDate) {
-          var dueMeta = document.createElement('span');
-          dueMeta.className = 'meta-item';
-          dueMeta.textContent = '📅 Due: ' + formatDate(data.dueDate);
-          metaEl.appendChild(dueMeta);
+          dueDateSectionEl.style.display = 'flex';
+          dueDateEl.textContent = formatDate(data.dueDate);
+          if (isOverdue(data.dueDate) && status !== 'done' && status !== 'cancelled') {
+            dueDateEl.classList.add('overdue');
+          } else {
+            dueDateEl.classList.remove('overdue');
+          }
+        } else {
+          dueDateSectionEl.style.display = 'none';
         }
         
-        if (data.createdAt) {
-          var createdMeta = document.createElement('span');
-          createdMeta.className = 'meta-item';
-          createdMeta.textContent = 'Created: ' + formatDate(data.createdAt);
-          metaEl.appendChild(createdMeta);
+        // Created at
+        createdAtEl.textContent = formatDateTime(data.createdAt);
+        
+        // Updated at
+        if (data.updatedAt && data.updatedAt !== data.createdAt) {
+          updatedSectionEl.style.display = 'flex';
+          updatedAtEl.textContent = formatDateTime(data.updatedAt);
+        } else {
+          updatedSectionEl.style.display = 'none';
         }
         
-        if (data.estimate) {
-          var estimateMeta = document.createElement('span');
-          estimateMeta.className = 'meta-item';
-          estimateMeta.textContent = '⏱️ ' + data.estimate + ' pts';
-          metaEl.appendChild(estimateMeta);
-        }
-        
-        // Show content
+        // Show content, hide loading
         loadingEl.classList.add('is-hidden');
         contentEl.classList.add('is-ready');
+        
+        // Report new size
         reportSize();
       }
       
+      // Handle incoming messages
       function handleMessage(event) {
-        var data = event.data;
+        const data = event.data;
         if (!data || typeof data !== 'object') return;
+        
+        // Skip non-JSON-RPC messages
         if (data.jsonrpc !== '2.0') return;
         
-        console.log('[point-a-issue-view] Received:', data.method || 'response');
+        console.log('[point-a-issue-view] Received message:', data.method || 'response', data);
         
+        // Handle response to our request
         if ('id' in data && pendingRequests.has(data.id)) {
-          var handlers = pendingRequests.get(data.id);
+          const { resolve, reject } = pendingRequests.get(data.id);
           pendingRequests.delete(data.id);
-          data.error ? handlers.reject(new Error(data.error.message)) : handlers.resolve(data.result);
+          data.error ? reject(new Error(data.error.message)) : resolve(data.result);
           return;
         }
         
+        // Handle host context changes (theme)
         if (data.method === 'ui/notifications/host-context-changed') {
           if (data.params && data.params.theme) {
-            document.body.className = data.params.theme;
+            applyTheme(data.params.theme);
           }
         }
         
+        // Handle tool result - this is what populates our UI!
         if (data.method === 'ui/notifications/tool-result') {
-          var params = data.params;
+          console.log('[point-a-issue-view] Tool result received:', data.params);
+          const params = data.params;
           if (params && params.structuredContent) {
+            console.log('[point-a-issue-view] Using structuredContent:', params.structuredContent);
             populateIssue(params.structuredContent);
           } else if (params && params.content) {
+            // Fallback: try to parse content if it's JSON
+            console.log('[point-a-issue-view] Falling back to content array');
             try {
-              var textContent = params.content.find(function(c) { return c.type === 'text'; });
+              const textContent = params.content.find(function(c) { return c.type === 'text'; });
               if (textContent && textContent.text) {
-                var parsed = JSON.parse(textContent.text);
+                const parsed = JSON.parse(textContent.text);
                 populateIssue(parsed);
               }
             } catch (e) {
-              console.error('[point-a-issue-view] Parse error:', e);
+              console.error('[point-a-issue-view] Could not parse tool result:', e);
             }
+          } else {
+            console.warn('[point-a-issue-view] Tool result has no structuredContent or content:', params);
           }
         }
       }
       
+      // Send JSON-RPC request
       function request(method, params) {
         return new Promise(function(resolve, reject) {
-          var id = ++requestId;
+          const id = ++requestId;
           pendingRequests.set(id, { resolve: resolve, reject: reject });
           window.parent.postMessage({ jsonrpc: '2.0', id: id, method: method, params: params }, '*');
           setTimeout(function() {
@@ -392,10 +568,17 @@
         });
       }
       
+      // Send notification
       function notify(method, params) {
         window.parent.postMessage({ jsonrpc: '2.0', method: method, params: params }, '*');
       }
       
+      // Apply theme
+      function applyTheme(theme) {
+        document.body.className = theme;
+      }
+      
+      // Report size to host
       function reportSize() {
         notify('ui/notifications/size-changed', { 
           height: document.body.scrollHeight,
@@ -403,9 +586,10 @@
         });
       }
       
+      // Initialize
       async function initialize() {
         try {
-          var result = await request('ui/initialize', {
+          const result = await request('ui/initialize', {
             protocolVersion: '2025-06-18',
             capabilities: {},
             appCapabilities: {},
@@ -413,18 +597,25 @@
             appInfo: { name: 'point-a-issue-view', version: '1.0.0' }
           });
           
+          // Apply initial theme
           if (result && result.hostContext && result.hostContext.theme) {
-            document.body.className = result.hostContext.theme;
+            applyTheme(result.hostContext.theme);
           }
           
+          // Send initialized notification
           notify('ui/notifications/initialized', {});
+          
+          // Report initial size
           reportSize();
         } catch (error) {
           console.error('Failed to initialize MCP App:', error);
         }
       }
       
+      // Set up message listener
       window.addEventListener('message', handleMessage);
+      
+      // Start initialization
       initialize();
     })();
   </script>

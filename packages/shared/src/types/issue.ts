@@ -46,6 +46,7 @@ export const issueSchema = z.object({
   parentId: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
+  completedAt: z.string().nullable(),
 })
 
 export type Issue = z.infer<typeof issueSchema>
