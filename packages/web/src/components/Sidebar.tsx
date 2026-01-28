@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils'
 import { useStore } from '@/stores/useStore'
 import { useUserStore } from '@/stores/useUserStore'
+import { useSavedViewsStore } from '@/stores/useSavedViewsStore'
 import { useProjects } from '@/hooks/useProjects'
 import { useIssues } from '@/hooks/useIssues'
 import { Button } from './ui/button'
@@ -15,16 +16,24 @@ import {
   FolderKanban,
   Plus,
   ChevronLeft,
+  ChevronDown,
   Settings,
   Search,
-  Home
+  Home,
+  Bookmark,
+  ChevronRight,
 } from 'lucide-react'
+import { useState } from 'react'
 
 export function Sidebar() {
-  const { sidebarOpen, toggleSidebar, currentProjectId, setCurrentProjectId, viewMode, setViewMode, setSettingsOpen, setCreateProjectOpen } = useStore()
+  const { sidebarOpen, toggleSidebar, currentProjectId, setCurrentProjectId, viewMode, setViewMode, setSettingsOpen, setCreateProjectOpen, setFilters, setDisplayOptions } = useStore()
   const { getUserIdentifier } = useUserStore()
+  const { views, activeViewId, setActiveView } = useSavedViewsStore()
   const { data: projectsData } = useProjects()
   const projects = projectsData?.data || []
+  
+  // Collapsible sections state
+  const [savedViewsExpanded, setSavedViewsExpanded] = useState(true)
   
   // Fetch inbox count (backlog + no priority)
   const { data: inboxData } = useIssues({ status: 'backlog', priority: 'none' })
@@ -38,6 +47,23 @@ export function Sidebar() {
   const myIssuesCount = myIssuesData?.data?.filter(
     (i: any) => i.status !== 'done' && i.status !== 'cancelled'
   )?.length || 0
+
+  // Handle clicking a saved view
+  const handleSavedViewClick = (view: typeof views[0]) => {
+    setActiveView(view.id)
+    setFilters(view.filters)
+    setDisplayOptions({
+      groupBy: view.groupBy,
+      sortBy: view.sortBy,
+      sortOrder: view.sortOrder,
+    })
+    if (view.projectId) {
+      setCurrentProjectId(view.projectId)
+    } else {
+      setCurrentProjectId(null)
+    }
+    setViewMode('list')
+  }
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -130,6 +156,75 @@ export function Sidebar() {
             }}
           />
           
+          {/* Saved Views Section */}
+          {views.length > 0 && (
+            <div className="pt-4">
+              {sidebarOpen ? (
+                <button
+                  onClick={() => setSavedViewsExpanded(!savedViewsExpanded)}
+                  className="w-full flex items-center justify-between px-2 mb-2 hover:bg-transparent"
+                >
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Saved Views
+                  </span>
+                  {savedViewsExpanded ? (
+                    <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                  ) : (
+                    <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                  )}
+                </button>
+              ) : (
+                <div className="flex justify-center mb-2">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button className="p-1">
+                        <Bookmark className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      <p>Saved Views</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              )}
+              
+              {(savedViewsExpanded || !sidebarOpen) && views.map((view) => {
+                const viewButton = (
+                  <button
+                    key={view.id}
+                    onClick={() => handleSavedViewClick(view)}
+                    className={cn(
+                      'w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors',
+                      'hover:bg-accent',
+                      activeViewId === view.id && 'bg-accent',
+                      !sidebarOpen && 'justify-center'
+                    )}
+                  >
+                    <span className="text-base">{view.icon}</span>
+                    {sidebarOpen && (
+                      <span className="flex-1 text-left truncate">{view.name}</span>
+                    )}
+                  </button>
+                )
+
+                if (!sidebarOpen) {
+                  return (
+                    <Tooltip key={view.id}>
+                      <TooltipTrigger asChild>
+                        {viewButton}
+                      </TooltipTrigger>
+                      <TooltipContent side="right">
+                        <p>{view.name}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )
+                }
+
+                return viewButton
+              })}
+            </div>
+          )}
+
           {/* Projects Section */}
           <div className="pt-4">
             {sidebarOpen && (
