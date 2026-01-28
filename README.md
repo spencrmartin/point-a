@@ -8,10 +8,13 @@ A local-first issue tracker with MCP integration for AI assistants. Built for de
 ## Features
 
 - **Local-first** - Your data stays on your machine (SQLite at `~/.point-a/`)
-- **Fast** - Instant search, drag-and-drop, keyboard shortcuts
+- **Fast** - Instant search, drag-and-drop, comprehensive keyboard shortcuts
 - **AI-powered** - MCP integration for Goose, Claude, and other AI assistants
 - **MCP Apps** - Rich HTML rendering of issues within AI assistants
-- **Timeline View** - Visualize task durations with start-to-completion spans
+- **Multiple Views** - Board, List, and Timeline views
+- **Comments & Checklists** - Collaborate with comments and break down work with checklists
+- **Saved Views** - Save filter combinations for quick access
+- **Command Palette** - Quick access to everything with ⌘+K
 - **Open Source** - MIT licensed, contributions welcome
 
 ## Quick Start
@@ -37,7 +40,7 @@ This will:
 ```bash
 ./dev.sh
 ```
-- Frontend: http://localhost:3000
+- Frontend: http://localhost:5173
 - API: http://localhost:3001
 
 **Production mode**:
@@ -190,13 +193,50 @@ Calendar view showing task durations:
 - `PATCH /api/labels/:id` - Update label
 - `DELETE /api/labels/:id` - Delete label
 
+### Comments
+- `GET /api/issues/:issueId/comments` - List comments for an issue
+- `POST /api/issues/:issueId/comments` - Create comment
+- `PATCH /api/comments/:id` - Update comment
+- `DELETE /api/comments/:id` - Delete comment
+
+### Checklists
+- `GET /api/issues/:issueId/checklist` - List checklist items
+- `GET /api/issues/:issueId/checklist/progress` - Get completion progress
+- `POST /api/issues/:issueId/checklist` - Create checklist item
+- `PATCH /api/checklist/:id` - Update checklist item
+- `POST /api/checklist/:id/toggle` - Toggle completion
+- `DELETE /api/checklist/:id` - Delete checklist item
+- `POST /api/issues/:issueId/checklist/reorder` - Reorder items
+
 ## Keyboard Shortcuts
+
+### Global Shortcuts
 
 | Shortcut | Action |
 |----------|--------|
-| `⌘ + K` | Quick create issue |
+| `⌘ + K` | Open command palette |
+| `⌘ + N` | Quick create issue |
 | `⌘ + /` | Search |
-| `Esc` | Close modal |
+| `⌘ + ,` | Open settings |
+| `⌘ + ?` | Show keyboard shortcuts help |
+
+### Navigation Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `H` | Go to Home |
+| `I` | Go to Inbox |
+| `M` | Go to My Issues |
+
+### Issue List Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `J` | Move down |
+| `K` | Move up |
+| `Enter` | Open selected issue |
+| `X` | Toggle selection |
+| `Esc` | Clear focus |
 
 ## Troubleshooting
 
