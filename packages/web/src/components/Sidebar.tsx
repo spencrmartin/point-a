@@ -50,16 +50,6 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { useState } from 'react'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
-} from './ui/dropdown-menu'
 import { toast } from 'sonner'
 
 // Map icon names to Lucide components
@@ -89,6 +79,104 @@ const iconMap: Record<SavedViewIcon, LucideIcon> = {
 function SavedViewIconComponent({ icon, className }: { icon: SavedViewIcon; className?: string }) {
   const IconComponent = iconMap[icon] || Bookmark
   return <IconComponent className={className} />
+}
+
+// Separate component for saved view item to manage its own popover state
+function SavedViewItem({
+  view,
+  isActive,
+  iconMap,
+  onClick,
+  onChangeIcon,
+  onDelete,
+}: {
+  view: { id: string; name: string; icon: SavedViewIcon }
+  isActive: boolean
+  iconMap: Record<SavedViewIcon, LucideIcon>
+  onClick: () => void
+  onChangeIcon: (icon: SavedViewIcon) => void
+  onDelete: () => void
+}) {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [iconPickerOpen, setIconPickerOpen] = useState(false)
+
+  return (
+    <div
+      className={cn(
+        'group flex items-center gap-1 rounded-md transition-colors',
+        'hover:bg-accent',
+        isActive && 'bg-accent'
+      )}
+    >
+      <button
+        onClick={onClick}
+        className="flex-1 flex items-center gap-2 px-2 py-1.5 text-sm"
+      >
+        <SavedViewIconComponent icon={view.icon} className="h-4 w-4 flex-shrink-0" />
+        <span className="flex-1 text-left truncate">{view.name}</span>
+      </button>
+      
+      <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+        <PopoverTrigger asChild>
+          <button className="p-1 mr-1 opacity-0 group-hover:opacity-100 hover:bg-muted rounded transition-opacity">
+            <MoreHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="w-48 p-1">
+          {/* Change Icon - opens icon picker */}
+          <Popover open={iconPickerOpen} onOpenChange={setIconPickerOpen}>
+            <PopoverTrigger asChild>
+              <button
+                className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-accent"
+              >
+                <Pencil className="h-4 w-4" />
+                Change Icon
+                <ChevronRight className="h-4 w-4 ml-auto" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent side="right" align="start" className="w-auto p-2">
+              <div className="grid grid-cols-5 gap-1">
+                {SAVED_VIEW_ICONS.map((iconName) => {
+                  const IconComp = iconMap[iconName]
+                  return (
+                    <button
+                      key={iconName}
+                      onClick={() => {
+                        onChangeIcon(iconName)
+                        setIconPickerOpen(false)
+                        setMenuOpen(false)
+                      }}
+                      className={cn(
+                        'p-2 rounded hover:bg-muted',
+                        view.icon === iconName && 'bg-primary/10'
+                      )}
+                      title={iconName}
+                    >
+                      <IconComp className="h-4 w-4" />
+                    </button>
+                  )
+                })}
+              </div>
+            </PopoverContent>
+          </Popover>
+          
+          <div className="-mx-1 my-1 h-px bg-muted" />
+          
+          {/* Delete */}
+          <button
+            onClick={() => {
+              onDelete()
+              setMenuOpen(false)
+            }}
+            className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-accent text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
+            Delete View
+          </button>
+        </PopoverContent>
+      </Popover>
+    </div>
+  )
 }
 
 export function Sidebar() {
@@ -292,66 +380,15 @@ export function Sidebar() {
                 }
 
                 return (
-                  <div
+                  <SavedViewItem
                     key={view.id}
-                    className={cn(
-                      'group flex items-center gap-1 rounded-md transition-colors',
-                      'hover:bg-accent',
-                      activeViewId === view.id && 'bg-accent'
-                    )}
-                  >
-                    <button
-                      onClick={() => handleSavedViewClick(view)}
-                      className="flex-1 flex items-center gap-2 px-2 py-1.5 text-sm"
-                    >
-                      <SavedViewIconComponent icon={view.icon} className="h-4 w-4 flex-shrink-0" />
-                      <span className="flex-1 text-left truncate">{view.name}</span>
-                    </button>
-                    
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="p-1 mr-1 opacity-0 group-hover:opacity-100 hover:bg-muted rounded transition-opacity">
-                          <MoreHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuSub>
-                          <DropdownMenuSubTrigger>
-                            <Pencil className="h-4 w-4 mr-2" />
-                            Change Icon
-                          </DropdownMenuSubTrigger>
-                          <DropdownMenuSubContent className="p-2">
-                            <div className="grid grid-cols-5 gap-1">
-                              {SAVED_VIEW_ICONS.map((iconName) => {
-                                const IconComp = iconMap[iconName]
-                                return (
-                                  <button
-                                    key={iconName}
-                                    onClick={() => handleChangeIcon(view.id, iconName)}
-                                    className={cn(
-                                      'p-2 rounded hover:bg-muted',
-                                      view.icon === iconName && 'bg-primary/10'
-                                    )}
-                                    title={iconName}
-                                  >
-                                    <IconComp className="h-4 w-4" />
-                                  </button>
-                                )
-                              })}
-                            </div>
-                          </DropdownMenuSubContent>
-                        </DropdownMenuSub>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          onClick={() => handleDeleteView(view.id, view.name)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete View
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
+                    view={view}
+                    isActive={activeViewId === view.id}
+                    iconMap={iconMap}
+                    onClick={() => handleSavedViewClick(view)}
+                    onChangeIcon={(newIcon) => handleChangeIcon(view.id, newIcon)}
+                    onDelete={() => handleDeleteView(view.id, view.name)}
+                  />
                 )
               })}
             </div>

@@ -7,6 +7,7 @@ import { ChevronRight } from "lucide-react"
 interface DropdownMenuContextValue {
   open: boolean
   setOpen: (open: boolean) => void
+  closeAll: () => void
 }
 
 const DropdownMenuContext = React.createContext<DropdownMenuContextValue | null>(null)
@@ -14,13 +15,22 @@ const DropdownMenuContext = React.createContext<DropdownMenuContextValue | null>
 function DropdownMenu({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = React.useState(false)
   
+  const closeAll = React.useCallback(() => {
+    setOpen(false)
+  }, [])
+  
   return (
-    <DropdownMenuContext.Provider value={{ open, setOpen }}>
+    <DropdownMenuContext.Provider value={{ open, setOpen, closeAll }}>
       <div className="relative inline-block">
         {children}
       </div>
     </DropdownMenuContext.Provider>
   )
+}
+
+// Hook to access dropdown context from anywhere in the tree
+function useDropdownMenu() {
+  return React.useContext(DropdownMenuContext)
 }
 
 function DropdownMenuTrigger({ 
@@ -167,8 +177,15 @@ function DropdownMenuSubTrigger({
   children: React.ReactNode
   className?: string 
 }) {
+  const subContext = React.useContext(SubMenuContext)
+  
+  const handleClick = () => {
+    subContext?.setOpen(!subContext.open)
+  }
+  
   return (
     <div
+      onClick={handleClick}
       className={cn(
         "flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none",
         "hover:bg-accent hover:text-accent-foreground",
@@ -188,8 +205,9 @@ function DropdownMenuSubContent({
   children: React.ReactNode
   className?: string 
 }) {
-  const context = React.useContext(SubMenuContext)
-  if (!context?.open) return null
+  const subContext = React.useContext(SubMenuContext)
+  
+  if (!subContext?.open) return null
 
   return (
     <div 
@@ -204,6 +222,12 @@ function DropdownMenuSubContent({
   )
 }
 
+// Hook to close dropdown from within submenu content
+function useCloseDropdown() {
+  const context = React.useContext(DropdownMenuContext)
+  return context?.closeAll
+}
+
 export {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -213,4 +237,5 @@ export {
   DropdownMenuSub,
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
+  useCloseDropdown,
 }
