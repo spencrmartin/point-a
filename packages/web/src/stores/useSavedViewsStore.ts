@@ -5,10 +5,36 @@ import type { IssueFilters } from './useStore'
 // Simple ID generator
 const generateId = () => Math.random().toString(36).substring(2, 15)
 
+// Available icons for saved views
+export const SAVED_VIEW_ICONS = [
+  'flame',
+  'zap',
+  'bug',
+  'rocket',
+  'star',
+  'heart',
+  'bookmark',
+  'flag',
+  'target',
+  'clock',
+  'calendar',
+  'filter',
+  'layers',
+  'grid',
+  'list',
+  'check-circle',
+  'alert-circle',
+  'alert-triangle',
+  'eye',
+  'archive',
+] as const
+
+export type SavedViewIcon = typeof SAVED_VIEW_ICONS[number]
+
 export interface SavedView {
   id: string
   name: string
-  icon: string
+  icon: SavedViewIcon
   filters: IssueFilters
   projectId: string | null // null means all projects
   groupBy: 'status' | 'priority' | 'assignee' | 'project' | 'none'
@@ -34,7 +60,7 @@ const defaultViews: SavedView[] = [
   {
     id: 'my-high-priority',
     name: 'High Priority',
-    icon: '🔥',
+    icon: 'flame',
     filters: {
       status: [],
       priority: ['urgent', 'high'],
@@ -50,7 +76,7 @@ const defaultViews: SavedView[] = [
   {
     id: 'in-progress',
     name: 'In Progress',
-    icon: '🚀',
+    icon: 'rocket',
     filters: {
       status: ['in_progress', 'in_review'],
       priority: [],
@@ -66,7 +92,7 @@ const defaultViews: SavedView[] = [
   {
     id: 'bugs',
     name: 'All Bugs',
-    icon: '🐛',
+    icon: 'bug',
     filters: {
       status: [],
       priority: [],

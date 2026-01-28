@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 import { useStore } from '@/stores/useStore'
 import { useUserStore } from '@/stores/useUserStore'
-import { useSavedViewsStore } from '@/stores/useSavedViewsStore'
+import { useSavedViewsStore, type SavedViewIcon } from '@/stores/useSavedViewsStore'
 import { useProjects } from '@/hooks/useProjects'
 import { useIssues } from '@/hooks/useIssues'
 import { Button } from './ui/button'
@@ -22,8 +22,57 @@ import {
   Home,
   Bookmark,
   ChevronRight,
+  Flame,
+  Zap,
+  Bug,
+  Rocket,
+  Star,
+  Heart,
+  Flag,
+  Target,
+  Clock,
+  Calendar,
+  Filter,
+  Layers,
+  Grid,
+  List,
+  CheckCircle,
+  AlertCircle,
+  AlertTriangle,
+  Eye,
+  Archive,
+  type LucideIcon,
 } from 'lucide-react'
 import { useState } from 'react'
+
+// Map icon names to Lucide components
+const iconMap: Record<SavedViewIcon, LucideIcon> = {
+  'flame': Flame,
+  'zap': Zap,
+  'bug': Bug,
+  'rocket': Rocket,
+  'star': Star,
+  'heart': Heart,
+  'bookmark': Bookmark,
+  'flag': Flag,
+  'target': Target,
+  'clock': Clock,
+  'calendar': Calendar,
+  'filter': Filter,
+  'layers': Layers,
+  'grid': Grid,
+  'list': List,
+  'check-circle': CheckCircle,
+  'alert-circle': AlertCircle,
+  'alert-triangle': AlertTriangle,
+  'eye': Eye,
+  'archive': Archive,
+}
+
+function SavedViewIconComponent({ icon, className }: { icon: SavedViewIcon; className?: string }) {
+  const IconComponent = iconMap[icon] || Bookmark
+  return <IconComponent className={className} />
+}
 
 export function Sidebar() {
   const { sidebarOpen, toggleSidebar, currentProjectId, setCurrentProjectId, viewMode, setViewMode, setSettingsOpen, setCreateProjectOpen, setFilters, setDisplayOptions } = useStore()
@@ -200,7 +249,7 @@ export function Sidebar() {
                       !sidebarOpen && 'justify-center'
                     )}
                   >
-                    <span className="text-base">{view.icon}</span>
+                    <SavedViewIconComponent icon={view.icon} className="h-4 w-4 flex-shrink-0" />
                     {sidebarOpen && (
                       <span className="flex-1 text-left truncate">{view.name}</span>
                     )}

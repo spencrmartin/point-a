@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useStore } from '@/stores/useStore'
-import { useSavedViewsStore } from '@/stores/useSavedViewsStore'
+import { useSavedViewsStore, SAVED_VIEW_ICONS, type SavedViewIcon } from '@/stores/useSavedViewsStore'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
@@ -21,6 +21,22 @@ import {
   Check,
   Bookmark,
   Plus,
+  Flame,
+  Zap,
+  Rocket,
+  Star,
+  Heart,
+  Flag,
+  Target,
+  Clock,
+  Calendar,
+  Grid,
+  List,
+  CheckCircle,
+  AlertTriangle,
+  Eye,
+  Archive,
+  type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -50,13 +66,35 @@ const TYPE_OPTIONS = [
   { value: 'epic', label: 'Epic', icon: Layers, color: 'text-indigo-500' },
 ]
 
-const EMOJI_OPTIONS = ['📋', '🔥', '🚀', '🐛', '⭐', '📌', '🎯', '💡', '🔍', '📊']
+// Map icon names to Lucide components for the icon picker
+const iconMap: Record<SavedViewIcon, LucideIcon> = {
+  'flame': Flame,
+  'zap': Zap,
+  'bug': Bug,
+  'rocket': Rocket,
+  'star': Star,
+  'heart': Heart,
+  'bookmark': Bookmark,
+  'flag': Flag,
+  'target': Target,
+  'clock': Clock,
+  'calendar': Calendar,
+  'filter': Filter,
+  'layers': Layers,
+  'grid': Grid,
+  'list': List,
+  'check-circle': CheckCircle,
+  'alert-circle': AlertCircle,
+  'alert-triangle': AlertTriangle,
+  'eye': Eye,
+  'archive': Archive,
+}
 
 export function FilterPopover() {
   const [open, setOpen] = useState(false)
   const [showSaveForm, setShowSaveForm] = useState(false)
   const [viewName, setViewName] = useState('')
-  const [viewIcon, setViewIcon] = useState('📋')
+  const [viewIcon, setViewIcon] = useState<SavedViewIcon>('bookmark')
   
   const { filters, setFilters, clearFilters, hasActiveFilters, currentProjectId, displayOptions } = useStore()
   const { addView } = useSavedViewsStore()
@@ -89,9 +127,12 @@ export function FilterPopover() {
     
     toast.success(`View "${viewName}" saved!`)
     setViewName('')
-    setViewIcon('📋')
+    setViewIcon('bookmark')
     setShowSaveForm(false)
   }
+  
+  // Get the current icon component
+  const CurrentIcon = iconMap[viewIcon] || Bookmark
 
   const activeCount = filters.status.length + filters.priority.length + filters.type.length + (filters.assignee ? 1 : 0)
 
@@ -223,24 +264,28 @@ export function FilterPopover() {
                   <div className="flex items-center gap-2">
                     <Popover>
                       <PopoverTrigger asChild>
-                        <button className="text-2xl p-1 hover:bg-muted rounded">
-                          {viewIcon}
+                        <button className="p-2 hover:bg-muted rounded border">
+                          <CurrentIcon className="h-4 w-4" />
                         </button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-2" align="start">
                         <div className="grid grid-cols-5 gap-1">
-                          {EMOJI_OPTIONS.map((emoji) => (
-                            <button
-                              key={emoji}
-                              onClick={() => setViewIcon(emoji)}
-                              className={cn(
-                                'text-xl p-1.5 rounded hover:bg-muted',
-                                viewIcon === emoji && 'bg-primary/10'
-                              )}
-                            >
-                              {emoji}
-                            </button>
-                          ))}
+                          {SAVED_VIEW_ICONS.map((iconName) => {
+                            const IconComponent = iconMap[iconName]
+                            return (
+                              <button
+                                key={iconName}
+                                onClick={() => setViewIcon(iconName)}
+                                className={cn(
+                                  'p-2 rounded hover:bg-muted',
+                                  viewIcon === iconName && 'bg-primary/10'
+                                )}
+                                title={iconName}
+                              >
+                                <IconComponent className="h-4 w-4" />
+                              </button>
+                            )
+                          })}
                         </div>
                       </PopoverContent>
                     </Popover>
