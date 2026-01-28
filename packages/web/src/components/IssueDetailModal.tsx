@@ -3,6 +3,7 @@ import { useStore } from '@/stores/useStore'
 import { useIssue, useUpdateIssue, useDeleteIssue } from '@/hooks/useIssues'
 import { Button } from './ui/button'
 import { CreatableCombobox, type ComboboxOption } from './ui/creatable-combobox'
+import { CommentThread } from './CommentThread'
 import { cn, formatRelativeDate } from '@/lib/utils'
 import { 
   X, 
@@ -388,6 +389,11 @@ export function IssueDetailModal() {
                       Due {formatRelativeDate(issue.dueDate)}
                     </div>
                   )}
+                </div>
+
+                {/* Comments */}
+                <div className="pt-4 border-t">
+                  <CommentThread issueId={issue.id} />
                 </div>
               </div>
             </div>

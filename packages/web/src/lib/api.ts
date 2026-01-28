@@ -3,6 +3,7 @@ import type {
   Project, CreateProject, UpdateProject, ProjectWithStats,
   Cycle, CreateCycle, UpdateCycle, CycleWithStats,
   Label, CreateLabel, UpdateLabel,
+  Comment, CreateCommentInput, UpdateCommentInput,
   ApiResponse 
 } from '@point-a/shared'
 
@@ -155,4 +156,22 @@ export const labelsApi = {
     }),
   delete: (id: string) =>
     fetchApi<{ success: boolean }>(`/labels/${id}`, { method: 'DELETE' }),
+}
+
+// Comments API
+export const commentsApi = {
+  list: (issueId: string) =>
+    fetchApi<ApiResponse<Comment[]>>(`/issues/${issueId}/comments`),
+  create: (issueId: string, data: CreateCommentInput) =>
+    fetchApi<ApiResponse<Comment>>(`/issues/${issueId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  update: (id: string, data: UpdateCommentInput) =>
+    fetchApi<ApiResponse<Comment>>(`/comments/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  delete: (id: string) =>
+    fetchApi<{ success: boolean }>(`/comments/${id}`, { method: 'DELETE' }),
 }
