@@ -4,6 +4,7 @@ import type {
   Cycle, CreateCycle, UpdateCycle, CycleWithStats,
   Label, CreateLabel, UpdateLabel,
   Comment, CreateCommentInput, UpdateCommentInput,
+  ChecklistItem, CreateChecklistItem, UpdateChecklistItem,
   ApiResponse 
 } from '@point-a/shared'
 
@@ -174,4 +175,33 @@ export const commentsApi = {
     }),
   delete: (id: string) =>
     fetchApi<{ success: boolean }>(`/comments/${id}`, { method: 'DELETE' }),
+}
+
+// Checklist API
+export const checklistApi = {
+  list: (issueId: string) =>
+    fetchApi<ApiResponse<ChecklistItem[]>>(`/issues/${issueId}/checklist`),
+  getProgress: (issueId: string) =>
+    fetchApi<ApiResponse<{ completed: number; total: number }>>(`/issues/${issueId}/checklist/progress`),
+  create: (issueId: string, data: CreateChecklistItem) =>
+    fetchApi<ApiResponse<ChecklistItem>>(`/issues/${issueId}/checklist`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  update: (id: string, data: UpdateChecklistItem) =>
+    fetchApi<ApiResponse<ChecklistItem>>(`/checklist/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  toggle: (id: string) =>
+    fetchApi<ApiResponse<ChecklistItem>>(`/checklist/${id}/toggle`, {
+      method: 'POST',
+    }),
+  delete: (id: string) =>
+    fetchApi<{ success: boolean }>(`/checklist/${id}`, { method: 'DELETE' }),
+  reorder: (issueId: string, itemIds: string[]) =>
+    fetchApi<ApiResponse<ChecklistItem[]>>(`/issues/${issueId}/checklist/reorder`, {
+      method: 'POST',
+      body: JSON.stringify({ itemIds }),
+    }),
 }

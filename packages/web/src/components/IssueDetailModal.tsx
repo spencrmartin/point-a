@@ -4,6 +4,7 @@ import { useIssue, useUpdateIssue, useDeleteIssue } from '@/hooks/useIssues'
 import { Button } from './ui/button'
 import { CreatableCombobox, type ComboboxOption } from './ui/creatable-combobox'
 import { CommentThread } from './CommentThread'
+import { ChecklistSection } from './ChecklistSection'
 import { cn, formatRelativeDate } from '@/lib/utils'
 import { 
   X, 
@@ -371,6 +372,11 @@ export function IssueDetailModal() {
                       )}
                     </div>
                   )}
+                </div>
+
+                {/* Checklist */}
+                <div className="pt-4 border-t">
+                  <ChecklistSection issueId={issue.id} />
                 </div>
 
                 {/* Metadata */}

@@ -83,6 +83,17 @@ export const comments = sqliteTable('comments', {
   updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`),
 })
 
+// Checklist items table
+export const checklistItems = sqliteTable('checklist_items', {
+  id: text('id').primaryKey(),
+  issueId: text('issue_id').notNull().references(() => issues.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  completed: integer('completed', { mode: 'boolean' }).notNull().default(false),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+  updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`),
+})
+
 // Type exports for use in services
 export type ProjectRow = typeof projects.$inferSelect
 export type NewProject = typeof projects.$inferInsert
@@ -94,3 +105,5 @@ export type LabelRow = typeof labels.$inferSelect
 export type NewLabel = typeof labels.$inferInsert
 export type CommentRow = typeof comments.$inferSelect
 export type NewComment = typeof comments.$inferInsert
+export type ChecklistItemRow = typeof checklistItems.$inferSelect
+export type NewChecklistItem = typeof checklistItems.$inferInsert
