@@ -158,13 +158,14 @@ export const issueService = {
     
     // Auto-set completedAt when status changes to done/cancelled
     let completedAt: string | null | undefined = undefined
-    if (data.status === 'done' || data.status === 'cancelled') {
+    const completedStatuses = ['done', 'cancelled']
+    if (data.status && completedStatuses.includes(data.status)) {
       // Get current issue to check if already completed
       const [current] = await db.select().from(issues).where(eq(issues.id, id))
       if (current && !current.completedAt) {
         completedAt = now
       }
-    } else if (data.status && data.status !== 'done' && data.status !== 'cancelled') {
+    } else if (data.status && !completedStatuses.includes(data.status)) {
       // Clear completedAt if moving back to an active status
       completedAt = null
     }
@@ -206,9 +207,10 @@ export const issueService = {
     
     // Auto-set completedAt for bulk status updates
     let completedAt: string | null | undefined = undefined
-    if (data.status === 'done' || data.status === 'cancelled') {
+    const completedStatuses = ['done', 'cancelled']
+    if (data.status && completedStatuses.includes(data.status)) {
       completedAt = now
-    } else if (data.status && data.status !== 'done' && data.status !== 'cancelled') {
+    } else if (data.status && !completedStatuses.includes(data.status)) {
       completedAt = null
     }
     
