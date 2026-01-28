@@ -281,125 +281,127 @@ export function ListView() {
 
       {/* Table */}
       <div className="flex-1 overflow-auto border rounded-lg">
-        {/* Header */}
-        <div className="sticky top-0 bg-card border-b z-10">
-          <div className="flex items-center px-3 py-2 text-sm font-medium text-muted-foreground">
-            <div className="w-8 flex items-center justify-center">
-              <input
-                type="checkbox"
-                checked={allSelected}
-                ref={(el) => {
-                  if (el) el.indeterminate = someSelected
-                }}
-                onChange={handleSelectAll}
-                className="rounded border-muted-foreground/50"
-              />
+        <div className="min-w-[800px]">
+          {/* Header */}
+          <div className="sticky top-0 bg-card border-b z-10">
+            <div className="flex items-center px-3 py-2 text-sm font-medium text-muted-foreground">
+              <div className="w-8 flex-shrink-0 flex items-center justify-center">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  ref={(el) => {
+                    if (el) el.indeterminate = someSelected
+                  }}
+                  onChange={handleSelectAll}
+                  className="rounded border-muted-foreground/50"
+                />
+              </div>
+              <div className="w-10 flex-shrink-0" />
+              <button
+                onClick={() => handleSort('title')}
+                className="flex-1 min-w-[200px] text-left hover:text-foreground flex items-center gap-1"
+              >
+                Title
+                {sortField === 'title' && (
+                  <ChevronDown className={cn('h-3 w-3', sortOrder === 'asc' && 'rotate-180')} />
+                )}
+              </button>
+              <button
+                onClick={() => handleSort('status')}
+                className="w-28 flex-shrink-0 text-left hover:text-foreground flex items-center gap-1"
+              >
+                Status
+                {sortField === 'status' && (
+                  <ChevronDown className={cn('h-3 w-3', sortOrder === 'asc' && 'rotate-180')} />
+                )}
+              </button>
+              <button
+                onClick={() => handleSort('priority')}
+                className="w-24 flex-shrink-0 text-left hover:text-foreground flex items-center gap-1"
+              >
+                Priority
+                {sortField === 'priority' && (
+                  <ChevronDown className={cn('h-3 w-3', sortOrder === 'asc' && 'rotate-180')} />
+                )}
+              </button>
+              <div className="w-24 flex-shrink-0 text-left">Assignee</div>
+              <button
+                onClick={() => handleSort('createdAt')}
+                className="w-28 flex-shrink-0 text-left hover:text-foreground flex items-center gap-1"
+              >
+                Created
+                {sortField === 'createdAt' && (
+                  <ChevronDown className={cn('h-3 w-3', sortOrder === 'asc' && 'rotate-180')} />
+                )}
+              </button>
+              <div className="w-8 flex-shrink-0" />
             </div>
-            <div className="w-10" />
-            <button
-              onClick={() => handleSort('title')}
-              className="flex-1 text-left hover:text-foreground flex items-center gap-1"
-            >
-              Title
-              {sortField === 'title' && (
-                <ChevronDown className={cn('h-3 w-3', sortOrder === 'asc' && 'rotate-180')} />
-              )}
-            </button>
-            <button
-              onClick={() => handleSort('status')}
-              className="w-28 text-left hover:text-foreground flex items-center gap-1"
-            >
-              Status
-              {sortField === 'status' && (
-                <ChevronDown className={cn('h-3 w-3', sortOrder === 'asc' && 'rotate-180')} />
-              )}
-            </button>
-            <button
-              onClick={() => handleSort('priority')}
-              className="w-24 text-left hover:text-foreground flex items-center gap-1"
-            >
-              Priority
-              {sortField === 'priority' && (
-                <ChevronDown className={cn('h-3 w-3', sortOrder === 'asc' && 'rotate-180')} />
-              )}
-            </button>
-            <div className="w-24 text-left">Assignee</div>
-            <button
-              onClick={() => handleSort('createdAt')}
-              className="w-28 text-left hover:text-foreground flex items-center gap-1"
-            >
-              Created
-              {sortField === 'createdAt' && (
-                <ChevronDown className={cn('h-3 w-3', sortOrder === 'asc' && 'rotate-180')} />
-              )}
-            </button>
-            <div className="w-8" />
           </div>
-        </div>
 
-        {/* Body */}
-        <div ref={listRef}>
-          {Object.entries(groupedIssues).map(([group, groupIssues]) => (
-            <div key={group}>
-              {/* Group Header */}
-              {groupBy !== 'none' && (
-                <button
-                  onClick={() => toggleGroup(group)}
-                  className="w-full flex items-center gap-2 px-3 py-2 bg-muted/50 hover:bg-muted text-sm font-medium"
-                >
-                  {expandedGroups.has(group) ? (
-                    <ChevronDown className="h-4 w-4" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4" />
-                  )}
-                  {groupBy === 'status' && (
-                    <>
-                      <div className={cn('w-2 h-2 rounded-full', statusConfig[group as IssueStatus]?.bg)} />
-                      {statusConfig[group as IssueStatus]?.label || group}
-                    </>
-                  )}
-                  {groupBy === 'priority' && (
-                    <>
-                      {(() => {
-                        const config = priorityConfig[group as IssuePriority]
-                        const Icon = config?.icon || Minus
-                        return <Icon className={cn('h-4 w-4', config?.color)} />
-                      })()}
-                      {priorityConfig[group as IssuePriority]?.label || group}
-                    </>
-                  )}
-                  <span className="text-muted-foreground ml-1">({groupIssues.length})</span>
-                </button>
-              )}
+          {/* Body */}
+          <div ref={listRef}>
+            {Object.entries(groupedIssues).map(([group, groupIssues]) => (
+              <div key={group}>
+                {/* Group Header */}
+                {groupBy !== 'none' && (
+                  <button
+                    onClick={() => toggleGroup(group)}
+                    className="w-full flex items-center gap-2 px-3 py-2 bg-muted/50 hover:bg-muted text-sm font-medium"
+                  >
+                    {expandedGroups.has(group) ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4" />
+                    )}
+                    {groupBy === 'status' && (
+                      <>
+                        <div className={cn('w-2 h-2 rounded-full', statusConfig[group as IssueStatus]?.bg)} />
+                        {statusConfig[group as IssueStatus]?.label || group}
+                      </>
+                    )}
+                    {groupBy === 'priority' && (
+                      <>
+                        {(() => {
+                          const config = priorityConfig[group as IssuePriority]
+                          const Icon = config?.icon || Minus
+                          return <Icon className={cn('h-4 w-4', config?.color)} />
+                        })()}
+                        {priorityConfig[group as IssuePriority]?.label || group}
+                      </>
+                    )}
+                    <span className="text-muted-foreground ml-1">({groupIssues.length})</span>
+                  </button>
+                )}
 
-              {/* Group Issues */}
-              {(groupBy === 'none' || expandedGroups.has(group)) && (
-                <div>
-                  {groupIssues.map((issue) => {
-                    const globalIndex = visibleIssues.findIndex(i => i.id === issue.id)
-                    return (
-                      <IssueRow
-                        key={issue.id}
-                        issue={issue}
-                        isSelected={selectedIssueIds.has(issue.id)}
-                        isFocused={focusedIndex === globalIndex}
-                        onSelect={() => toggleIssueSelection(issue.id)}
-                        onClick={() => setActiveIssueId(issue.id)}
-                        onStatusChange={(status) => updateIssue.mutate({ id: issue.id, data: { status } })}
-                        onPriorityChange={(priority) => updateIssue.mutate({ id: issue.id, data: { priority } })}
-                      />
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          ))}
+                {/* Group Issues */}
+                {(groupBy === 'none' || expandedGroups.has(group)) && (
+                  <div>
+                    {groupIssues.map((issue) => {
+                      const globalIndex = visibleIssues.findIndex(i => i.id === issue.id)
+                      return (
+                        <IssueRow
+                          key={issue.id}
+                          issue={issue}
+                          isSelected={selectedIssueIds.has(issue.id)}
+                          isFocused={focusedIndex === globalIndex}
+                          onSelect={() => toggleIssueSelection(issue.id)}
+                          onClick={() => setActiveIssueId(issue.id)}
+                          onStatusChange={(status) => updateIssue.mutate({ id: issue.id, data: { status } })}
+                          onPriorityChange={(priority) => updateIssue.mutate({ id: issue.id, data: { priority } })}
+                        />
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            ))}
 
-          {issues.length === 0 && (
-            <div className="flex items-center justify-center h-32 text-muted-foreground">
-              No issues found
-            </div>
-          )}
+            {issues.length === 0 && (
+              <div className="flex items-center justify-center h-32 text-muted-foreground">
+                No issues found
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -434,7 +436,7 @@ function IssueRow({
         isFocused && 'bg-primary/10 ring-2 ring-primary/50 ring-inset'
       )}
     >
-      <div className="w-8 flex items-center justify-center">
+      <div className="w-8 flex-shrink-0 flex items-center justify-center">
         <input
           type="checkbox"
           checked={isSelected}
@@ -446,20 +448,20 @@ function IssueRow({
         />
       </div>
       
-      <div className="w-10 flex items-center justify-center">
+      <div className="w-10 flex-shrink-0 flex items-center justify-center">
         <TypeIcon className="h-4 w-4 text-muted-foreground" />
       </div>
       
-      <div className="flex-1 min-w-0" onClick={onClick}>
+      <div className="flex-1 min-w-[200px]" onClick={onClick}>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground font-mono">{issue.identifier}</span>
+          <span className="text-xs text-muted-foreground font-mono flex-shrink-0">{issue.identifier}</span>
           <span className="truncate">{issue.title}</span>
           {issue.labels && issue.labels.length > 0 && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 flex-shrink-0">
               {issue.labels.slice(0, 2).map((label) => (
                 <span
                   key={label.id}
-                  className="px-1.5 py-0.5 text-xs rounded-full"
+                  className="px-1.5 py-0.5 text-xs rounded-full whitespace-nowrap"
                   style={{ backgroundColor: `${label.color}20`, color: label.color }}
                 >
                   {label.name}
@@ -470,7 +472,7 @@ function IssueRow({
         </div>
       </div>
       
-      <div className="w-28">
+      <div className="w-28 flex-shrink-0">
         <select
           value={issue.status || 'backlog'}
           onChange={(e) => {
@@ -488,7 +490,7 @@ function IssueRow({
         </select>
       </div>
       
-      <div className="w-24">
+      <div className="w-24 flex-shrink-0">
         <select
           value={issue.priority || 'none'}
           onChange={(e) => {
@@ -503,10 +505,10 @@ function IssueRow({
         </select>
       </div>
       
-      <div className="w-24 flex items-center gap-1">
+      <div className="w-24 flex-shrink-0 flex items-center gap-1">
         {issue.assignee ? (
           <>
-            <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
               <span className="text-xs">{issue.assignee.charAt(0).toUpperCase()}</span>
             </div>
             <span className="text-xs truncate">{issue.assignee}</span>
@@ -516,11 +518,11 @@ function IssueRow({
         )}
       </div>
       
-      <div className="w-28 text-xs text-muted-foreground">
+      <div className="w-28 flex-shrink-0 text-xs text-muted-foreground">
         {formatRelativeDate(issue.createdAt)}
       </div>
       
-      <div className="w-8">
+      <div className="w-8 flex-shrink-0">
         <Button
           variant="ghost"
           size="icon"
