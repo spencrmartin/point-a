@@ -2,6 +2,7 @@ import { cn } from '@/lib/utils'
 import { useStore } from '@/stores/useStore'
 import { useUserStore } from '@/stores/useUserStore'
 import { useSavedViewsStore, SAVED_VIEW_ICONS, type SavedViewIcon } from '@/stores/useSavedViewsStore'
+import { useKeyboardContext } from '@/contexts/KeyboardContext'
 import { useProjects } from '@/hooks/useProjects'
 import { useIssues } from '@/hooks/useIssues'
 import { Button } from './ui/button'
@@ -45,6 +46,7 @@ import {
   MoreHorizontal,
   Pencil,
   Trash2,
+  Keyboard,
   type LucideIcon,
 } from 'lucide-react'
 import { useState } from 'react'
@@ -90,9 +92,10 @@ function SavedViewIconComponent({ icon, className }: { icon: SavedViewIcon; clas
 }
 
 export function Sidebar() {
-  const { sidebarOpen, toggleSidebar, currentProjectId, setCurrentProjectId, viewMode, setViewMode, setSettingsOpen, setCreateProjectOpen, setFilters, setDisplayOptions } = useStore()
+  const { sidebarOpen, toggleSidebar, currentProjectId, setCurrentProjectId, viewMode, setViewMode, setCreateProjectOpen, setFilters, setDisplayOptions } = useStore()
   const { getUserIdentifier } = useUserStore()
   const { views, activeViewId, setActiveView, updateView, deleteView } = useSavedViewsStore()
+  const { setSettingsOpen, setShortcutsHelpOpen } = useKeyboardContext()
   const { data: projectsData } = useProjects()
   const projects = projectsData?.data || []
   
@@ -423,12 +426,20 @@ export function Sidebar() {
         </nav>
 
         {/* Footer */}
-        <div className="p-3 border-t">
+        <div className="p-3 border-t space-y-1">
+          <NavItem 
+            icon={Keyboard} 
+            label="Shortcuts" 
+            collapsed={!sidebarOpen} 
+            onClick={() => setShortcutsHelpOpen(true)}
+            shortcut="⌘?"
+          />
           <NavItem 
             icon={Settings} 
             label="Settings" 
             collapsed={!sidebarOpen} 
             onClick={() => setSettingsOpen(true)}
+            shortcut="⌘,"
           />
         </div>
       </aside>
@@ -442,6 +453,7 @@ function NavItem({
   collapsed,
   active,
   count,
+  shortcut,
   onClick 
 }: { 
   icon: React.ElementType
@@ -449,6 +461,7 @@ function NavItem({
   collapsed: boolean
   active?: boolean
   count?: number
+  shortcut?: string
   onClick?: () => void
 }) {
   const button = (
@@ -470,6 +483,11 @@ function NavItem({
               {count}
             </Badge>
           )}
+          {shortcut && (
+            <kbd className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+              {shortcut}
+            </kbd>
+          )}
         </>
       )}
     </button>
@@ -489,7 +507,7 @@ function NavItem({
           </div>
         </TooltipTrigger>
         <TooltipContent side="right">
-          <p>{label}{count !== undefined && count > 0 ? ` (${count})` : ''}</p>
+          <p>{label}{shortcut ? ` (${shortcut})` : ''}{count !== undefined && count > 0 ? ` (${count})` : ''}</p>
         </TooltipContent>
       </Tooltip>
     )

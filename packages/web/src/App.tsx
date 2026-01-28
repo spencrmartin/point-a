@@ -121,10 +121,7 @@ function AppContent() {
         <div className="flex-1 flex flex-col gap-3 min-w-0">
           {/* Header Panel */}
           <div className="rounded-2xl border bg-card/80 backdrop-blur-sm shadow-sm">
-            <Header 
-              onOpenSettings={() => setSettingsOpen(true)}
-              onOpenShortcuts={() => setShortcutsHelpOpen(true)}
-            />
+            <Header />
           </div>
           
           {/* Content Panel */}

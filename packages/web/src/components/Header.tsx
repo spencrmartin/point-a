@@ -13,16 +13,9 @@ import {
   GanttChart,
   Plus,
   Search,
-  Keyboard,
-  Settings,
 } from 'lucide-react'
 
-interface HeaderProps {
-  onOpenSettings?: () => void
-  onOpenShortcuts?: () => void
-}
-
-export function Header({ onOpenSettings, onOpenShortcuts }: HeaderProps) {
+export function Header() {
   const { 
     currentProjectId, 
     viewMode, 
@@ -80,43 +73,8 @@ export function Header({ onOpenSettings, onOpenShortcuts }: HeaderProps) {
           />
         </div>
 
-        {/* Right: Actions */}
+        {/* Right: Create button */}
         <div className="flex items-center gap-1">
-          {/* Keyboard shortcuts */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-9 w-9"
-                onClick={onOpenShortcuts}
-              >
-                <Keyboard className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Keyboard shortcuts (⌘?)</p>
-            </TooltipContent>
-          </Tooltip>
-
-          {/* Settings */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-9 w-9"
-                onClick={onOpenSettings}
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Settings (⌘,)</p>
-            </TooltipContent>
-          </Tooltip>
-
-          {/* Create */}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button size="sm" onClick={() => setQuickCreateOpen(true)} className="gap-1.5">
