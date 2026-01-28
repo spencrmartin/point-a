@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useStore } from '@/stores/useStore'
+import { useSavedViewsStore } from '@/stores/useSavedViewsStore'
 import { Button } from './ui/button'
+import { Input } from './ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
 import { 
@@ -16,9 +18,12 @@ import {
   Wrench,
   CheckSquare,
   Layers,
-  Check
+  Check,
+  Bookmark,
+  Plus,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 
 const STATUS_OPTIONS = [
   { value: 'backlog', label: 'Backlog', icon: Circle, color: 'text-gray-400' },
@@ -45,9 +50,16 @@ const TYPE_OPTIONS = [
   { value: 'epic', label: 'Epic', icon: Layers, color: 'text-indigo-500' },
 ]
 
+const EMOJI_OPTIONS = ['📋', '🔥', '🚀', '🐛', '⭐', '📌', '🎯', '💡', '🔍', '📊']
+
 export function FilterPopover() {
   const [open, setOpen] = useState(false)
-  const { filters, setFilters, clearFilters, hasActiveFilters } = useStore()
+  const [showSaveForm, setShowSaveForm] = useState(false)
+  const [viewName, setViewName] = useState('')
+  const [viewIcon, setViewIcon] = useState('📋')
+  
+  const { filters, setFilters, clearFilters, hasActiveFilters, currentProjectId, displayOptions } = useStore()
+  const { addView } = useSavedViewsStore()
   const activeFilters = hasActiveFilters()
 
   const toggleFilter = (type: 'status' | 'priority' | 'type', value: string) => {
@@ -57,6 +69,28 @@ export function FilterPopover() {
     } else {
       setFilters({ [type]: [...current, value] })
     }
+  }
+
+  const handleSaveView = () => {
+    if (!viewName.trim()) {
+      toast.error('Please enter a view name')
+      return
+    }
+    
+    addView({
+      name: viewName.trim(),
+      icon: viewIcon,
+      filters: { ...filters },
+      projectId: currentProjectId,
+      groupBy: displayOptions.groupBy,
+      sortBy: displayOptions.sortBy,
+      sortOrder: displayOptions.sortOrder,
+    })
+    
+    toast.success(`View "${viewName}" saved!`)
+    setViewName('')
+    setViewIcon('📋')
+    setShowSaveForm(false)
   }
 
   const activeCount = filters.status.length + filters.priority.length + filters.type.length + (filters.assignee ? 1 : 0)
@@ -170,6 +204,83 @@ export function FilterPopover() {
               })}
             </div>
           </div>
+
+          {/* Save as View */}
+          {activeFilters && (
+            <div className="pt-2 border-t">
+              {!showSaveForm ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => setShowSaveForm(true)}
+                >
+                  <Bookmark className="h-4 w-4 mr-2" />
+                  Save as View
+                </Button>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button className="text-2xl p-1 hover:bg-muted rounded">
+                          {viewIcon}
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-2" align="start">
+                        <div className="grid grid-cols-5 gap-1">
+                          {EMOJI_OPTIONS.map((emoji) => (
+                            <button
+                              key={emoji}
+                              onClick={() => setViewIcon(emoji)}
+                              className={cn(
+                                'text-xl p-1.5 rounded hover:bg-muted',
+                                viewIcon === emoji && 'bg-primary/10'
+                              )}
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                    <Input
+                      placeholder="View name..."
+                      value={viewName}
+                      onChange={(e) => setViewName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSaveView()
+                        if (e.key === 'Escape') setShowSaveForm(false)
+                      }}
+                      className="flex-1"
+                      autoFocus
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => {
+                        setShowSaveForm(false)
+                        setViewName('')
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="flex-1"
+                      onClick={handleSaveView}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Save
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </PopoverContent>
       </Popover>
