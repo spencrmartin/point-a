@@ -7,25 +7,55 @@ import type {
 } from '@point-a/shared'
 
 const API_BASE = '/api'
+const MAX_RETRIES = 3
+const INITIAL_RETRY_DELAY = 1000 // 1 second
+
+// Helper to delay execution
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 async function fetchApi<T>(
   endpoint: string,
   options?: RequestInit
 ): Promise<T> {
-  const res = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  })
+  let lastError: Error | null = null
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      const res = await fetch(`${API_BASE}${endpoint}`, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options?.headers,
+        },
+      })
 
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: 'Unknown error' }))
-    throw new Error(error.message || `HTTP ${res.status}`)
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({ message: 'Unknown error' }))
+        throw new Error(error.message || `HTTP ${res.status}`)
+      }
+
+      return res.json()
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err))
+      
+      // Only retry on network errors (not HTTP errors like 404, 500)
+      const isNetworkError = lastError.message.includes('fetch') || 
+                            lastError.message.includes('network') ||
+                            lastError.message.includes('ETIMEDOUT') ||
+                            lastError.name === 'TypeError'
+      
+      if (!isNetworkError || attempt === MAX_RETRIES - 1) {
+        throw lastError
+      }
+      
+      // Exponential backoff: 1s, 2s, 4s...
+      const retryDelay = INITIAL_RETRY_DELAY * Math.pow(2, attempt)
+      console.log(`API request failed, retrying in ${retryDelay}ms... (attempt ${attempt + 1}/${MAX_RETRIES})`)
+      await delay(retryDelay)
+    }
   }
-
-  return res.json()
+  
+  throw lastError || new Error('Request failed')
 }
 
 // Projects API

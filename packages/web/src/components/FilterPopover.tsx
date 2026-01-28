@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useStore } from '@/stores/useStore'
 import { Button } from './ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
 import { 
   Filter, 
   X, 
@@ -61,18 +62,26 @@ export function FilterPopover() {
   const activeCount = filters.status.length + filters.priority.length + filters.type.length + (filters.assignee ? 1 : 0)
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className={cn(activeFilters && 'border-primary')}>
-          <Filter className="h-4 w-4 mr-2" />
-          Filter
-          {activeCount > 0 && (
-            <span className="ml-2 bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded-full">
-              {activeCount}
-            </span>
-          )}
-        </Button>
-      </PopoverTrigger>
+    <TooltipProvider delayDuration={0}>
+      <Popover open={open} onOpenChange={setOpen}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className={cn(activeFilters && 'border-primary', 'px-2 sm:px-3')}>
+                <Filter className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Filter</span>
+                {activeCount > 0 && (
+                  <span className="ml-1 sm:ml-2 bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded-full">
+                    {activeCount}
+                  </span>
+                )}
+              </Button>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent className="sm:hidden">
+            <p>Filter{activeCount > 0 ? ` (${activeCount})` : ''}</p>
+          </TooltipContent>
+        </Tooltip>
       <PopoverContent className="w-80 p-0" align="end">
         <div className="p-3 border-b flex items-center justify-between">
           <span className="font-medium">Filters</span>
@@ -163,6 +172,7 @@ export function FilterPopover() {
           </div>
         </div>
       </PopoverContent>
-    </Popover>
+      </Popover>
+    </TooltipProvider>
   )
 }

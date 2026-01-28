@@ -4,10 +4,11 @@ import { BoardColumnSkeleton } from './Skeleton'
 import { useStore } from '@/stores/useStore'
 import { useIssues, useUpdateIssueStatus } from '@/hooks/useIssues'
 import { cn } from '@/lib/utils'
-import { Plus, Filter, SlidersHorizontal } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { Button } from './ui/button'
 import { FilterPopover } from './FilterPopover'
 import { DisplayPopover } from './DisplayPopover'
+import { MoreMenu } from './MoreMenu'
 import type { IssueStatus, IssueWithRelations } from '@point-a/shared'
 
 const columns: { id: IssueStatus; label: string; color: string }[] = [
@@ -118,8 +119,13 @@ export function BoardView() {
     <div className="flex flex-col h-full">
       {/* Toolbar */}
       <div className="flex items-center justify-end gap-2 pb-3">
-        <FilterPopover />
-        <DisplayPopover />
+        {/* Desktop: Show individual buttons */}
+        <div className="hidden sm:flex items-center gap-2">
+          <FilterPopover />
+          <DisplayPopover />
+        </div>
+        {/* Mobile: Show More menu */}
+        <MoreMenu />
       </div>
       
       {/* Board */}

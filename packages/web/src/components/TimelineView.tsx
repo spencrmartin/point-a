@@ -6,6 +6,8 @@ import { Button } from './ui/button'
 import { Skeleton, CalendarDaySkeleton } from './Skeleton'
 import { FilterPopover } from './FilterPopover'
 import { DisplayPopover } from './DisplayPopover'
+import { MoreMenu } from './MoreMenu'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
 import type { IssueWithRelations, IssueStatus } from '@point-a/shared'
 import {
   ChevronLeft,
@@ -25,6 +27,29 @@ const statusColors: Record<IssueStatus, string> = {
   in_review: 'bg-purple-500',
   done: 'bg-green-500',
   cancelled: 'bg-red-500',
+}
+
+// Hex colors for SVG/inline styles
+const statusHexColors: Record<IssueStatus, string> = {
+  backlog: '#9ca3af',
+  todo: '#3b82f6',
+  in_progress: '#eab308',
+  in_review: '#a855f7',
+  done: '#22c55e',
+  cancelled: '#ef4444',
+}
+
+// Helper to get date key string
+const getDateKey = (date: Date | string): string => {
+  const d = typeof date === 'string' ? new Date(date) : date
+  return d.toISOString().split('T')[0]
+}
+
+// Helper to check if two dates are the same day
+const isSameDay = (d1: Date, d2: Date): boolean => {
+  return d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate()
 }
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -133,35 +158,43 @@ export function TimelineView() {
 
         {/* Right side controls */}
         <div className="flex items-center gap-2">
-          {/* View Mode Switcher */}
-          <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
-            <ViewModeButton
-              icon={LayoutGrid}
-              label="Month"
-              active={viewMode === 'month'}
-              onClick={() => setViewMode('month')}
-            />
-            <ViewModeButton
-              icon={CalendarRange}
-              label="Week"
-              active={viewMode === 'week'}
-              onClick={() => setViewMode('week')}
-            />
-            <ViewModeButton
-              icon={Calendar}
-              label="Day"
-              active={viewMode === 'day'}
-              onClick={() => setViewMode('day')}
-            />
-            <ViewModeButton
-              icon={CalendarDays}
-              label="Agenda"
-              active={viewMode === 'agenda'}
-              onClick={() => setViewMode('agenda')}
-            />
+          {/* Desktop: View Mode Switcher + Filter/Display */}
+          <div className="hidden sm:flex items-center gap-2">
+            <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
+              <ViewModeButton
+                icon={LayoutGrid}
+                label="Month"
+                active={viewMode === 'month'}
+                onClick={() => setViewMode('month')}
+              />
+              <ViewModeButton
+                icon={CalendarRange}
+                label="Week"
+                active={viewMode === 'week'}
+                onClick={() => setViewMode('week')}
+              />
+              <ViewModeButton
+                icon={Calendar}
+                label="Day"
+                active={viewMode === 'day'}
+                onClick={() => setViewMode('day')}
+              />
+              <ViewModeButton
+                icon={CalendarDays}
+                label="Agenda"
+                active={viewMode === 'agenda'}
+                onClick={() => setViewMode('agenda')}
+              />
+            </div>
+            <FilterPopover />
+            <DisplayPopover />
           </div>
-          <FilterPopover />
-          <DisplayPopover />
+          {/* Mobile: More menu with all options */}
+          <MoreMenu 
+            showCalendarViews 
+            calendarViewMode={viewMode} 
+            onCalendarViewModeChange={setViewMode} 
+          />
         </div>
       </div>
 
@@ -170,7 +203,7 @@ export function TimelineView() {
         {viewMode === 'month' && (
           <MonthView
             currentDate={currentDate}
-            issuesByDate={issuesByDate}
+            issues={issues}
             onIssueClick={setActiveIssueId}
           />
         )}
@@ -211,32 +244,52 @@ function ViewModeButton({
   onClick: () => void
 }) {
   return (
-    <button
-      onClick={onClick}
-      className={cn(
-        'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors',
-        active ? 'bg-background shadow-sm' : 'hover:bg-background/50'
-      )}
-    >
-      <Icon className="h-4 w-4" />
-      <span className="hidden sm:inline">{label}</span>
-    </button>
+    <TooltipProvider delayDuration={0}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={onClick}
+            className={cn(
+              'flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-sm transition-colors',
+              active ? 'bg-background shadow-sm' : 'hover:bg-background/50'
+            )}
+          >
+            <Icon className="h-4 w-4" />
+            <span className="hidden sm:inline">{label}</span>
+          </button>
+        </TooltipTrigger>
+        <TooltipContent className="sm:hidden">
+          <p>{label}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   )
 }
 
-// Month View Component
+// Types for duration spans
+interface IssueSpan {
+  issue: IssueWithRelations
+  startIndex: number  // Index in the days array where issue starts (or continues from prev week)
+  endIndex: number    // Index in the days array where issue ends (or continues to next week)
+  isStart: boolean    // True if this is the actual start date
+  isEnd: boolean      // True if this is the actual end date
+  row: number         // Which row (week) this span is in
+}
+
+// Month View Component with Duration Spans
 function MonthView({
   currentDate,
-  issuesByDate,
+  issues,
   onIssueClick,
 }: {
   currentDate: Date
-  issuesByDate: Record<string, IssueWithRelations[]>
+  issues: IssueWithRelations[]
   onIssueClick: (id: string) => void
 }) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
+  // Generate all days in the calendar view (6 weeks)
   const days = useMemo(() => {
     const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
     const startDate = new Date(firstDayOfMonth)
@@ -251,6 +304,94 @@ function MonthView({
     return result
   }, [currentDate])
 
+  // Calculate issue spans for the visible calendar
+  const issueSpans = useMemo(() => {
+    const spans: IssueSpan[] = []
+    const calendarStart = days[0]
+    const calendarEnd = days[days.length - 1]
+
+    issues.forEach((issue) => {
+      if (!issue.createdAt) return
+
+      const startDate = new Date(issue.createdAt)
+      startDate.setHours(0, 0, 0, 0)
+
+      // End date is completedAt if done/cancelled, otherwise today (for in-progress visualization)
+      let endDate: Date
+      if (issue.completedAt) {
+        endDate = new Date(issue.completedAt)
+      } else if (issue.status === 'done' || issue.status === 'cancelled') {
+        // Fallback for completed issues without completedAt
+        endDate = new Date(issue.updatedAt)
+      } else {
+        // For active issues, show span to today
+        endDate = new Date(today)
+      }
+      endDate.setHours(0, 0, 0, 0)
+
+      // Skip if entirely outside calendar view
+      if (endDate < calendarStart || startDate > calendarEnd) return
+
+      // Clamp to calendar bounds
+      const visibleStart = startDate < calendarStart ? calendarStart : startDate
+      const visibleEnd = endDate > calendarEnd ? calendarEnd : endDate
+
+      // Find indices in days array
+      let startIdx = -1
+      let endIdx = -1
+      for (let i = 0; i < days.length; i++) {
+        if (isSameDay(days[i], visibleStart) && startIdx === -1) startIdx = i
+        if (isSameDay(days[i], visibleEnd)) endIdx = i
+      }
+
+      if (startIdx === -1 || endIdx === -1) return
+
+      // Create spans for each week row the issue appears in
+      const startRow = Math.floor(startIdx / 7)
+      const endRow = Math.floor(endIdx / 7)
+
+      for (let row = startRow; row <= endRow; row++) {
+        const rowStart = row * 7
+        const rowEnd = row * 7 + 6
+
+        spans.push({
+          issue,
+          startIndex: Math.max(startIdx, rowStart),
+          endIndex: Math.min(endIdx, rowEnd),
+          isStart: startIdx >= rowStart && startIdx <= rowEnd && isSameDay(days[startIdx], startDate),
+          isEnd: endIdx >= rowStart && endIdx <= rowEnd && isSameDay(days[endIdx], endDate),
+          row,
+        })
+      }
+    })
+
+    return spans
+  }, [issues, days, today])
+
+  // Group spans by row for rendering
+  const spansByRow = useMemo(() => {
+    const byRow: Record<number, IssueSpan[]> = {}
+    issueSpans.forEach((span) => {
+      if (!byRow[span.row]) byRow[span.row] = []
+      byRow[span.row].push(span)
+    })
+    // Sort spans in each row by start index
+    Object.values(byRow).forEach((rowSpans) => {
+      rowSpans.sort((a, b) => a.startIndex - b.startIndex)
+    })
+    return byRow
+  }, [issueSpans])
+
+  // Get issues that START on a specific date (for showing dots)
+  const getIssuesStartingOn = (dateIndex: number): IssueSpan[] => {
+    return issueSpans.filter((span) => span.startIndex === dateIndex && span.isStart)
+  }
+
+  // Get issues that END on a specific date (for showing dots)
+  const getIssuesEndingOn = (dateIndex: number): IssueSpan[] => {
+    return issueSpans.filter((span) => span.endIndex === dateIndex && span.isEnd)
+  }
+
   return (
     <div className="border rounded-lg overflow-hidden">
       {/* Day Headers */}
@@ -262,57 +403,113 @@ function MonthView({
         ))}
       </div>
 
-      {/* Calendar Grid */}
-      <div className="grid grid-cols-7">
-        {days.map((date, index) => {
-          const dateKey = date.toISOString().split('T')[0]
-          const dayIssues = issuesByDate[dateKey] || []
-          const isCurrentMonth = date.getMonth() === currentDate.getMonth()
-          const isToday = date.getTime() === today.getTime()
+      {/* Calendar Grid - Render by weeks */}
+      {Array.from({ length: 6 }).map((_, weekIndex) => {
+        const weekSpans = spansByRow[weekIndex] || []
 
-          return (
-            <div
-              key={index}
-              className={cn(
-                'min-h-[100px] p-1 border-b border-r cursor-pointer hover:bg-muted/50 transition-colors',
-                !isCurrentMonth && 'bg-muted/30',
-                index % 7 === 6 && 'border-r-0'
-              )}
-            >
-              <div className={cn(
-                'text-sm font-medium mb-1 w-7 h-7 flex items-center justify-center rounded-full',
-                isToday && 'bg-primary text-primary-foreground',
-                !isCurrentMonth && 'text-muted-foreground'
-              )}>
-                {date.getDate()}
-              </div>
-              <div className="space-y-1">
-                {dayIssues.slice(0, 3).map((issue) => (
+        return (
+          <div key={weekIndex} className="relative">
+            {/* Duration span lines (rendered as overlay) */}
+            <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 1 }}>
+              {weekSpans.slice(0, 4).map((span, spanIdx) => {
+                const startCol = span.startIndex % 7
+                const endCol = span.endIndex % 7
+                const color = statusHexColors[span.issue.status || 'backlog']
+                const topOffset = 36 + spanIdx * 14 // Below date number, stacked
+
+                return (
                   <div
-                    key={issue.id}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onIssueClick(issue.id)
+                    key={`${span.issue.id}-${weekIndex}`}
+                    className="absolute flex items-center"
+                    style={{
+                      left: `calc(${(startCol / 7) * 100}% + 4px)`,
+                      right: `calc(${((6 - endCol) / 7) * 100}% + 4px)`,
+                      top: `${topOffset}px`,
+                      height: '10px',
                     }}
+                  >
+                    {/* Start dot */}
+                    {span.isStart && (
+                      <div
+                        className="w-2 h-2 rounded-full flex-shrink-0 cursor-pointer hover:scale-125 transition-transform pointer-events-auto"
+                        style={{ backgroundColor: color }}
+                        title={`${span.issue.identifier}: ${span.issue.title} (started)`}
+                        onClick={() => onIssueClick(span.issue.id)}
+                      />
+                    )}
+
+                    {/* Connecting line */}
+                    <div
+                      className="flex-1 h-0.5"
+                      style={{ backgroundColor: color, opacity: 0.5 }}
+                    />
+
+                    {/* End dot */}
+                    {span.isEnd && (
+                      <div
+                        className="w-2 h-2 rounded-full flex-shrink-0 cursor-pointer hover:scale-125 transition-transform pointer-events-auto"
+                        style={{ backgroundColor: color }}
+                        title={`${span.issue.identifier}: ${span.issue.title} (${span.issue.completedAt ? 'completed' : 'in progress'})`}
+                        onClick={() => onIssueClick(span.issue.id)}
+                      />
+                    )}
+
+                    {/* Continuation indicator (no dot, just line extending) */}
+                    {!span.isStart && (
+                      <div
+                        className="w-1 h-0.5 flex-shrink-0"
+                        style={{ backgroundColor: color, opacity: 0.5 }}
+                      />
+                    )}
+                    {!span.isEnd && (
+                      <div
+                        className="w-1 h-0.5 flex-shrink-0"
+                        style={{ backgroundColor: color, opacity: 0.5 }}
+                      />
+                    )}
+                  </div>
+                )
+              })}
+              {weekSpans.length > 4 && (
+                <div
+                  className="absolute text-xs text-muted-foreground"
+                  style={{ left: '4px', top: '92px' }}
+                >
+                  +{weekSpans.length - 4} more
+                </div>
+              )}
+            </div>
+
+            {/* Day cells */}
+            <div className="grid grid-cols-7">
+              {days.slice(weekIndex * 7, weekIndex * 7 + 7).map((date, dayIdx) => {
+                const globalIndex = weekIndex * 7 + dayIdx
+                const isCurrentMonth = date.getMonth() === currentDate.getMonth()
+                const isToday = date.getTime() === today.getTime()
+
+                return (
+                  <div
+                    key={globalIndex}
                     className={cn(
-                      'text-xs px-1.5 py-0.5 rounded truncate cursor-pointer hover:opacity-80',
-                      statusColors[issue.status || 'backlog'],
-                      'text-white'
+                      'min-h-[100px] p-1 border-b border-r hover:bg-muted/50 transition-colors relative',
+                      !isCurrentMonth && 'bg-muted/30',
+                      dayIdx === 6 && 'border-r-0'
                     )}
                   >
-                    {issue.identifier} {issue.title}
+                    <div className={cn(
+                      'text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full',
+                      isToday && 'bg-primary text-primary-foreground',
+                      !isCurrentMonth && 'text-muted-foreground'
+                    )}>
+                      {date.getDate()}
+                    </div>
                   </div>
-                ))}
-                {dayIssues.length > 3 && (
-                  <div className="text-xs text-muted-foreground px-1">
-                    +{dayIssues.length - 3} more
-                  </div>
-                )}
-              </div>
+                )
+              })}
             </div>
-          )
-        })}
-      </div>
+          </div>
+        )
+      })}
     </div>
   )
 }

@@ -16,7 +16,7 @@ import {
 } from 'lucide-react'
 
 export function Sidebar() {
-  const { sidebarOpen, toggleSidebar, currentProjectId, setCurrentProjectId, setSettingsOpen, setCreateProjectOpen } = useStore()
+  const { sidebarOpen, toggleSidebar, currentProjectId, setCurrentProjectId, setViewMode, setSettingsOpen, setCreateProjectOpen } = useStore()
   const { data: projectsData } = useProjects()
   const projects = projectsData?.data || []
 
@@ -110,7 +110,10 @@ export function Sidebar() {
               const projectButton = (
                 <button
                   key={project.id}
-                  onClick={() => setCurrentProjectId(project.id)}
+                  onClick={() => {
+                    setCurrentProjectId(project.id)
+                    setViewMode('board')
+                  }}
                   className={cn(
                     'w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors',
                     'hover:bg-accent',

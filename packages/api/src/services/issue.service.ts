@@ -156,10 +156,24 @@ export const issueService = {
   async update(id: string, data: UpdateIssue) {
     const now = new Date().toISOString()
     
+    // Auto-set completedAt when status changes to done/cancelled
+    let completedAt: string | null | undefined = undefined
+    if (data.status === 'done' || data.status === 'cancelled') {
+      // Get current issue to check if already completed
+      const [current] = await db.select().from(issues).where(eq(issues.id, id))
+      if (current && !current.completedAt) {
+        completedAt = now
+      }
+    } else if (data.status && data.status !== 'done' && data.status !== 'cancelled') {
+      // Clear completedAt if moving back to an active status
+      completedAt = null
+    }
+    
     const [issue] = await db.update(issues)
       .set({
         ...data,
         updatedAt: now,
+        ...(completedAt !== undefined ? { completedAt } : {}),
       })
       .where(eq(issues.id, id))
       .returning()
@@ -190,10 +204,19 @@ export const issueService = {
   async bulkUpdate(ids: string[], data: UpdateIssue) {
     const now = new Date().toISOString()
     
+    // Auto-set completedAt for bulk status updates
+    let completedAt: string | null | undefined = undefined
+    if (data.status === 'done' || data.status === 'cancelled') {
+      completedAt = now
+    } else if (data.status && data.status !== 'done' && data.status !== 'cancelled') {
+      completedAt = null
+    }
+    
     await db.update(issues)
       .set({
         ...data,
         updatedAt: now,
+        ...(completedAt !== undefined ? { completedAt } : {}),
       })
       .where(inArray(issues.id, ids))
 
