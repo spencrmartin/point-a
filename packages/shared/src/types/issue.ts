@@ -101,7 +101,7 @@ export const issueListQuerySchema = z.object({
   cycleId: z.string().optional(),
   assignee: z.string().optional(),
   search: z.string().optional(),
-  limit: z.coerce.number().min(1).max(100).default(50),
+  limit: z.coerce.number().min(1).max(1000).default(50),
   offset: z.coerce.number().min(0).default(0),
   orderBy: z.enum(['createdAt', 'updatedAt', 'priority', 'dueDate']).default('createdAt'),
   order: z.enum(['asc', 'desc']).default('desc'),
