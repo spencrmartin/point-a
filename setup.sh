@@ -249,8 +249,8 @@ echo -e "${GREEN}✓ Web frontend started (PID: $WEB_PID)${NC}"
 echo ""
 echo -e "${GREEN}✨ Point A is running!${NC}"
 echo ""
-echo "  API:      http://localhost:3000"
 echo "  Frontend: http://localhost:4173"
+echo "  API:      http://localhost:3001"
 echo ""
 echo "  API logs: tail -f api.log"
 echo "  Web logs: tail -f web.log"
@@ -363,6 +363,7 @@ fi
 # Also kill any remaining node processes on our ports
 echo -e "${BLUE}Cleaning up any remaining processes...${NC}"
 lsof -ti:3000 | xargs kill -9 2>/dev/null || true
+lsof -ti:3001 | xargs kill -9 2>/dev/null || true
 lsof -ti:4173 | xargs kill -9 2>/dev/null || true
 lsof -ti:5173 | xargs kill -9 2>/dev/null || true
 

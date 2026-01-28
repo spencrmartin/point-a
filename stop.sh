@@ -48,6 +48,7 @@ fi
 # Also kill any remaining node processes on our ports
 echo -e "${BLUE}Cleaning up any remaining processes...${NC}"
 lsof -ti:3000 | xargs kill -9 2>/dev/null || true
+lsof -ti:3001 | xargs kill -9 2>/dev/null || true
 lsof -ti:4173 | xargs kill -9 2>/dev/null || true
 lsof -ti:5173 | xargs kill -9 2>/dev/null || true
 
