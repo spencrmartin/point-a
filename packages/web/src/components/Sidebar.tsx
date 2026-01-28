@@ -1,12 +1,13 @@
 import { cn } from '@/lib/utils'
 import { useStore } from '@/stores/useStore'
 import { useUserStore } from '@/stores/useUserStore'
-import { useSavedViewsStore, type SavedViewIcon } from '@/stores/useSavedViewsStore'
+import { useSavedViewsStore, SAVED_VIEW_ICONS, type SavedViewIcon } from '@/stores/useSavedViewsStore'
 import { useProjects } from '@/hooks/useProjects'
 import { useIssues } from '@/hooks/useIssues'
 import { Button } from './ui/button'
 import { Badge } from './ui/badge'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { PointALogo } from './PointALogo'
 import { ProjectIcon } from '@/lib/project-icons'
 import { 
@@ -41,9 +42,23 @@ import {
   AlertTriangle,
   Eye,
   Archive,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
   type LucideIcon,
 } from 'lucide-react'
 import { useState } from 'react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+} from './ui/dropdown-menu'
+import { toast } from 'sonner'
 
 // Map icon names to Lucide components
 const iconMap: Record<SavedViewIcon, LucideIcon> = {
@@ -77,12 +92,24 @@ function SavedViewIconComponent({ icon, className }: { icon: SavedViewIcon; clas
 export function Sidebar() {
   const { sidebarOpen, toggleSidebar, currentProjectId, setCurrentProjectId, viewMode, setViewMode, setSettingsOpen, setCreateProjectOpen, setFilters, setDisplayOptions } = useStore()
   const { getUserIdentifier } = useUserStore()
-  const { views, activeViewId, setActiveView } = useSavedViewsStore()
+  const { views, activeViewId, setActiveView, updateView, deleteView } = useSavedViewsStore()
   const { data: projectsData } = useProjects()
   const projects = projectsData?.data || []
   
   // Collapsible sections state
   const [savedViewsExpanded, setSavedViewsExpanded] = useState(true)
+  
+  // Handle changing a saved view's icon
+  const handleChangeIcon = (viewId: string, newIcon: SavedViewIcon) => {
+    updateView(viewId, { icon: newIcon })
+    toast.success('Icon updated')
+  }
+  
+  // Handle deleting a saved view
+  const handleDeleteView = (viewId: string, viewName: string) => {
+    deleteView(viewId)
+    toast.success(`"${viewName}" deleted`)
+  }
   
   // Fetch inbox count (backlog + no priority)
   const { data: inboxData } = useIssues({ status: 'backlog', priority: 'none' })
@@ -238,29 +265,21 @@ export function Sidebar() {
               )}
               
               {(savedViewsExpanded || !sidebarOpen) && views.map((view) => {
-                const viewButton = (
-                  <button
-                    key={view.id}
-                    onClick={() => handleSavedViewClick(view)}
-                    className={cn(
-                      'w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors',
-                      'hover:bg-accent',
-                      activeViewId === view.id && 'bg-accent',
-                      !sidebarOpen && 'justify-center'
-                    )}
-                  >
-                    <SavedViewIconComponent icon={view.icon} className="h-4 w-4 flex-shrink-0" />
-                    {sidebarOpen && (
-                      <span className="flex-1 text-left truncate">{view.name}</span>
-                    )}
-                  </button>
-                )
-
                 if (!sidebarOpen) {
                   return (
                     <Tooltip key={view.id}>
                       <TooltipTrigger asChild>
-                        {viewButton}
+                        <button
+                          onClick={() => handleSavedViewClick(view)}
+                          className={cn(
+                            'w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors',
+                            'hover:bg-accent',
+                            activeViewId === view.id && 'bg-accent',
+                            'justify-center'
+                          )}
+                        >
+                          <SavedViewIconComponent icon={view.icon} className="h-4 w-4 flex-shrink-0" />
+                        </button>
                       </TooltipTrigger>
                       <TooltipContent side="right">
                         <p>{view.name}</p>
@@ -269,7 +288,68 @@ export function Sidebar() {
                   )
                 }
 
-                return viewButton
+                return (
+                  <div
+                    key={view.id}
+                    className={cn(
+                      'group flex items-center gap-1 rounded-md transition-colors',
+                      'hover:bg-accent',
+                      activeViewId === view.id && 'bg-accent'
+                    )}
+                  >
+                    <button
+                      onClick={() => handleSavedViewClick(view)}
+                      className="flex-1 flex items-center gap-2 px-2 py-1.5 text-sm"
+                    >
+                      <SavedViewIconComponent icon={view.icon} className="h-4 w-4 flex-shrink-0" />
+                      <span className="flex-1 text-left truncate">{view.name}</span>
+                    </button>
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="p-1 mr-1 opacity-0 group-hover:opacity-100 hover:bg-muted rounded transition-opacity">
+                          <MoreHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger>
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Change Icon
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent className="p-2">
+                            <div className="grid grid-cols-5 gap-1">
+                              {SAVED_VIEW_ICONS.map((iconName) => {
+                                const IconComp = iconMap[iconName]
+                                return (
+                                  <button
+                                    key={iconName}
+                                    onClick={() => handleChangeIcon(view.id, iconName)}
+                                    className={cn(
+                                      'p-2 rounded hover:bg-muted',
+                                      view.icon === iconName && 'bg-primary/10'
+                                    )}
+                                    title={iconName}
+                                  >
+                                    <IconComp className="h-4 w-4" />
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => handleDeleteView(view.id, view.name)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete View
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                )
               })}
             </div>
           )}
