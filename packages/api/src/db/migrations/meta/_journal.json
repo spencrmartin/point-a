@@ -8,6 +8,13 @@
       "when": 1769529484528,
       "tag": "0000_elite_magus",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1769530000000,
+      "tag": "0001_add_completed_at",
+      "breakpoints": true
     }
   ]
 }
