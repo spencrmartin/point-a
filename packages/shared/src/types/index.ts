@@ -83,6 +83,25 @@ export type {
   ReorderChecklistItems,
 } from './checklist.js'
 
+// Dependency types
+export {
+  DependencyType,
+  dependencyWithIssueSchema,
+  issueDependenciesSchema,
+  createDependencySchema,
+  blockedIssueSchema,
+  actionableIssueSchema,
+  criticalPathSchema,
+} from './dependency.js'
+export type {
+  DependencyWithIssue,
+  IssueDependencies,
+  CreateDependency,
+  BlockedIssue,
+  ActionableIssue,
+  CriticalPath,
+} from './dependency.js'
+
 // API Response types
 export interface ApiResponse<T> {
   data: T

@@ -94,6 +94,17 @@ export const checklistItems = sqliteTable('checklist_items', {
   updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`),
 })
 
+// Issue dependencies table
+export const issueDependencies = sqliteTable('issue_dependencies', {
+  id: text('id').primaryKey(),
+  sourceIssueId: text('source_issue_id').notNull().references(() => issues.id, { onDelete: 'cascade' }),
+  targetIssueId: text('target_issue_id').notNull().references(() => issues.id, { onDelete: 'cascade' }),
+  dependencyType: text('dependency_type', {
+    enum: ['blocks', 'relates', 'duplicates']
+  }).notNull(),
+  createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+})
+
 // Type exports for use in services
 export type ProjectRow = typeof projects.$inferSelect
 export type NewProject = typeof projects.$inferInsert
@@ -107,3 +118,5 @@ export type CommentRow = typeof comments.$inferSelect
 export type NewComment = typeof comments.$inferInsert
 export type ChecklistItemRow = typeof checklistItems.$inferSelect
 export type NewChecklistItem = typeof checklistItems.$inferInsert
+export type IssueDependencyRow = typeof issueDependencies.$inferSelect
+export type NewIssueDependency = typeof issueDependencies.$inferInsert
