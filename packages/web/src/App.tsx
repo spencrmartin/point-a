@@ -3,6 +3,7 @@ import { Toaster } from 'sonner'
 import { Sidebar } from './components/Sidebar'
 import { Header } from './components/Header'
 import { HomeView } from './components/HomeView'
+import { ProjectHomeView } from './components/ProjectHomeView'
 import { BoardView } from './components/BoardView'
 import { ListView } from './components/ListView'
 import { TimelineView } from './components/TimelineView'
@@ -11,6 +12,7 @@ import { InboxView } from './components/InboxView'
 import { MyIssuesView } from './components/MyIssuesView'
 import { QuickCreateModal } from './components/QuickCreateModal'
 import { CreateProjectModal } from './components/CreateProjectModal'
+import { EditProjectModal } from './components/EditProjectModal'
 import { IssueDetailModal } from './components/IssueDetailModal'
 import { Settings } from './components/Settings'
 import { CommandPalette } from './components/CommandPalette'
@@ -128,6 +130,7 @@ function AppContent() {
           {/* Content Panel */}
           <main className="flex-1 rounded-2xl border bg-card/80 backdrop-blur-sm shadow-sm overflow-auto">
             {viewMode === 'home' && <HomeView />}
+            {viewMode === 'project-home' && <ProjectHomeView />}
             {viewMode === 'board' && <div className="p-4 h-full"><BoardView /></div>}
             {viewMode === 'list' && <div className="p-4 h-full"><ListView /></div>}
             {viewMode === 'timeline' && <div className="p-4 h-full"><TimelineView /></div>}
@@ -141,6 +144,7 @@ function AppContent() {
       {/* Modals */}
       <QuickCreateModal />
       <CreateProjectModal />
+      <EditProjectModal />
       <IssueDetailModal />
       <Settings open={isSettingsOpen} onClose={() => setSettingsOpen(false)} />
       

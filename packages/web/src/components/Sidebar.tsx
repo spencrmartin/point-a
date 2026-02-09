@@ -180,7 +180,7 @@ function SavedViewItem({
 }
 
 export function Sidebar() {
-  const { sidebarOpen, toggleSidebar, currentProjectId, setCurrentProjectId, viewMode, setViewMode, setCreateProjectOpen, setFilters, setDisplayOptions } = useStore()
+  const { sidebarOpen, toggleSidebar, currentProjectId, setCurrentProjectId, viewMode, setViewMode, setCreateProjectOpen, setEditProjectId, setFilters, setDisplayOptions } = useStore()
   const { getUserIdentifier } = useUserStore()
   const { views, activeViewId, setActiveView, updateView, deleteView } = useSavedViewsStore()
   const { setSettingsOpen, setShortcutsHelpOpen } = useKeyboardContext()
@@ -413,42 +413,29 @@ export function Sidebar() {
             )}
             
             {projects.map((project) => {
-              const projectButton = (
-                <button
-                  key={project.id}
-                  onClick={() => {
-                    setCurrentProjectId(project.id)
-                    setViewMode('board')
-                  }}
-                  className={cn(
-                    'w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors',
-                    'hover:bg-accent',
-                    currentProjectId === project.id && 'bg-accent',
-                    !sidebarOpen && 'justify-center'
-                  )}
-                >
-                  <div
-                    className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: project.color + '20', color: project.color }}
-                  >
-                    <ProjectIcon iconId={project.icon} size={14} />
-                  </div>
-                  {sidebarOpen && (
-                    <>
-                      <span className="flex-1 text-left truncate">{project.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {project.openIssueCount}
-                      </span>
-                    </>
-                  )}
-                </button>
-              )
-
               if (!sidebarOpen) {
                 return (
                   <Tooltip key={project.id}>
                     <TooltipTrigger asChild>
-                      {projectButton}
+                      <button
+                        onClick={() => {
+                          setCurrentProjectId(project.id)
+                          setViewMode('project-home')
+                        }}
+                        className={cn(
+                          'w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors',
+                          'hover:bg-accent',
+                          currentProjectId === project.id && 'bg-accent',
+                          'justify-center'
+                        )}
+                      >
+                        <div
+                          className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0"
+                          style={{ backgroundColor: project.color + '20', color: project.color }}
+                        >
+                          <ProjectIcon iconId={project.icon} size={14} />
+                        </div>
+                      </button>
                     </TooltipTrigger>
                     <TooltipContent side="right">
                       <p>{project.name} ({project.openIssueCount})</p>
@@ -457,7 +444,46 @@ export function Sidebar() {
                 )
               }
 
-              return projectButton
+              return (
+                <div
+                  key={project.id}
+                  className={cn(
+                    'group flex items-center rounded-md transition-colors',
+                    'hover:bg-accent',
+                    currentProjectId === project.id && 'bg-accent'
+                  )}
+                >
+                  <button
+                    onClick={() => {
+                      setCurrentProjectId(project.id)
+                      setViewMode('project-home')
+                    }}
+                    className="flex-1 flex items-center gap-2 px-2 py-1.5 text-sm min-w-0"
+                  >
+                    <div
+                      className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: project.color + '20', color: project.color }}
+                    >
+                      <ProjectIcon iconId={project.icon} size={14} />
+                    </div>
+                    <span className="flex-1 text-left truncate min-w-0">{project.name}</span>
+                  </button>
+                  <div className="relative flex items-center justify-end pr-2 flex-shrink-0 w-8">
+                    <span className="text-xs text-muted-foreground group-hover:opacity-0 transition-opacity">
+                      {project.openIssueCount}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setEditProjectId(project.id)
+                      }}
+                      className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-muted rounded transition-opacity"
+                    >
+                      <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                    </button>
+                  </div>
+                </div>
+              )
             })}
           </div>
         </nav>

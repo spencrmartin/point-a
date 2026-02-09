@@ -35,8 +35,8 @@ interface AppState {
   toggleSidebar: () => void
   
   // View preferences
-  viewMode: 'home' | 'board' | 'list' | 'timeline' | 'inbox' | 'my-issues' | 'project-home' | 'graph'
-  setViewMode: (mode: 'home' | 'board' | 'list' | 'timeline' | 'inbox' | 'my-issues' | 'project-home' | 'graph') => void
+  viewMode: 'home' | 'project-home' | 'board' | 'list' | 'timeline' | 'inbox' | 'my-issues' | 'graph'
+  setViewMode: (mode: 'home' | 'project-home' | 'board' | 'list' | 'timeline' | 'inbox' | 'my-issues' | 'graph') => void
   
   // Sub-view for inbox/my-issues (which layout to use within those sections)
   subViewMode: 'board' | 'list' | 'timeline'
@@ -67,6 +67,10 @@ interface AppState {
   // Create project modal
   createProjectOpen: boolean
   setCreateProjectOpen: (open: boolean) => void
+
+  // Edit project modal
+  editProjectId: string | null
+  setEditProjectId: (id: string | null) => void
 }
 
 const defaultFilters: IssueFilters = {
@@ -151,4 +155,7 @@ export const useStore = create<AppState>((set, get) => ({
 
   createProjectOpen: false,
   setCreateProjectOpen: (open) => set({ createProjectOpen: open }),
+
+  editProjectId: null,
+  setEditProjectId: (id) => set({ editProjectId: id }),
 }))
