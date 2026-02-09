@@ -51,5 +51,13 @@ lsof -ti:3000 | xargs kill -9 2>/dev/null || true
 lsof -ti:4173 | xargs kill -9 2>/dev/null || true
 lsof -ti:5173 | xargs kill -9 2>/dev/null || true
 
+# Clean up orphaned MCP processes
+ORPHANED=$(pgrep -f "point-a/packages/mcp" 2>/dev/null | wc -l | tr -d ' ')
+if [ "$ORPHANED" -gt "0" ]; then
+    echo -e "${BLUE}Cleaning up $ORPHANED orphaned MCP processes...${NC}"
+    pkill -f "point-a/packages/mcp" 2>/dev/null || true
+    echo -e "${GREEN}✓ Orphaned MCP processes cleaned up${NC}"
+fi
+
 echo ""
 echo -e "${GREEN}Point A stopped${NC}"

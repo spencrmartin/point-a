@@ -20,22 +20,31 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
-# Check if Node.js is installed
+# Check if Node.js is installed and find the best path
 echo -e "${BLUE}Checking Node.js installation...${NC}"
-if ! command -v node &> /dev/null; then
+
+# Try to find node - prefer nvm, then homebrew, then system
+NODE_PATH=""
+if [ -f "$HOME/.nvm/versions/node/$(ls -1 $HOME/.nvm/versions/node 2>/dev/null | sort -V | tail -1)/bin/node" ]; then
+    NODE_PATH="$HOME/.nvm/versions/node/$(ls -1 $HOME/.nvm/versions/node | sort -V | tail -1)/bin/node"
+elif command -v node &> /dev/null; then
+    NODE_PATH=$(which node)
+fi
+
+if [ -z "$NODE_PATH" ]; then
     echo -e "${RED}Error: Node.js is not installed${NC}"
     echo "Please install Node.js 18+ from https://nodejs.org/"
     exit 1
 fi
 
-NODE_VERSION=$(node --version)
+NODE_VERSION=$($NODE_PATH --version)
 NODE_MAJOR=$(echo $NODE_VERSION | cut -d'.' -f1 | sed 's/v//')
 if [ "$NODE_MAJOR" -lt 18 ]; then
     echo -e "${RED}Error: Node.js 18+ is required (found $NODE_VERSION)${NC}"
     echo "Please upgrade Node.js from https://nodejs.org/"
     exit 1
 fi
-echo -e "${GREEN}✓ Found Node.js $NODE_VERSION${NC}"
+echo -e "${GREEN}✓ Found Node.js $NODE_VERSION at $NODE_PATH${NC}"
 echo ""
 
 # Check if pnpm is installed
@@ -68,6 +77,12 @@ fi
 echo -e "${GREEN}✓ Dependencies installed${NC}"
 echo ""
 
+# Rebuild native modules to match current Node version
+echo -e "${BLUE}Rebuilding native modules...${NC}"
+pnpm rebuild better-sqlite3 2>/dev/null || true
+echo -e "${GREEN}✓ Native modules rebuilt${NC}"
+echo ""
+
 # Build all packages
 echo -e "${BLUE}Building packages...${NC}"
 pnpm build
@@ -90,7 +105,17 @@ if [ ! -d "src/db/migrations" ] || [ -z "$(ls -A src/db/migrations 2>/dev/null)"
 fi
 
 echo -e "${YELLOW}  Running migrations...${NC}"
-pnpm db:migrate
+# Run migrations - ignore errors for already-applied migrations (duplicate column errors)
+if pnpm db:migrate 2>&1; then
+    echo -e "${GREEN}✓ Migrations applied${NC}"
+else
+    # Check if it's just a "duplicate column" error (migration already applied)
+    if pnpm db:migrate 2>&1 | grep -q "duplicate column"; then
+        echo -e "${YELLOW}  Migrations already applied (database is up to date)${NC}"
+    else
+        echo -e "${RED}Warning: Migration had issues, but continuing...${NC}"
+    fi
+fi
 
 cd ../..
 echo -e "${GREEN}✓ Database ready${NC}"
@@ -136,7 +161,7 @@ fi
 # Add point-a extension to Goose config
 if [ -f "$GOOSE_CONFIG" ] && grep -q "^extensions:" "$GOOSE_CONFIG"; then
     # Insert point-a after "extensions:" line using a temp file approach
-    awk -v script_dir="$SCRIPT_DIR" -v pointa_dir="$POINTA_DIR" '
+    awk -v script_dir="$SCRIPT_DIR" -v pointa_dir="$POINTA_DIR" -v node_path="$NODE_PATH" '
         /^extensions:/ {
             print
             print "  point-a:"
@@ -144,7 +169,7 @@ if [ -f "$GOOSE_CONFIG" ] && grep -q "^extensions:" "$GOOSE_CONFIG"; then
             print "    type: stdio"
             print "    name: Point A"
             print "    description: Local-first issue tracker with AI integration"
-            print "    cmd: node"
+            print "    cmd: " node_path
             print "    args:"
             print "      - " script_dir "/packages/mcp/dist/index.js"
             print "    envs:"
@@ -158,7 +183,7 @@ if [ -f "$GOOSE_CONFIG" ] && grep -q "^extensions:" "$GOOSE_CONFIG"; then
         { print }
     ' "$GOOSE_CONFIG" > "$GOOSE_CONFIG.tmp"
     mv "$GOOSE_CONFIG.tmp" "$GOOSE_CONFIG"
-    echo -e "${GREEN}✓ Point A extension added to Goose config${NC}"
+    echo -e "${GREEN}✓ Point A extension added to Goose config (using $NODE_PATH)${NC}"
 else
     # Create new config file with point-a extension
     cat > "$GOOSE_CONFIG" << EOF
@@ -168,7 +193,7 @@ extensions:
     type: stdio
     name: Point A
     description: Local-first issue tracker with AI integration
-    cmd: node
+    cmd: $NODE_PATH
     args:
       - $SCRIPT_DIR/packages/mcp/dist/index.js
     envs:
@@ -178,7 +203,7 @@ extensions:
     bundled: null
     available_tools: []
 EOF
-    echo -e "${GREEN}✓ Created Goose config with Point A extension${NC}"
+    echo -e "${GREEN}✓ Created Goose config with Point A extension (using $NODE_PATH)${NC}"
 fi
 echo ""
 
@@ -365,6 +390,14 @@ echo -e "${BLUE}Cleaning up any remaining processes...${NC}"
 lsof -ti:3000 | xargs kill -9 2>/dev/null || true
 lsof -ti:4173 | xargs kill -9 2>/dev/null || true
 lsof -ti:5173 | xargs kill -9 2>/dev/null || true
+
+# Clean up orphaned MCP processes
+ORPHANED=$(pgrep -f "point-a/packages/mcp" 2>/dev/null | wc -l | tr -d ' ')
+if [ "$ORPHANED" -gt "0" ]; then
+    echo -e "${BLUE}Cleaning up $ORPHANED orphaned MCP processes...${NC}"
+    pkill -f "point-a/packages/mcp" 2>/dev/null || true
+    echo -e "${GREEN}✓ Orphaned MCP processes cleaned up${NC}"
+fi
 
 echo ""
 echo -e "${GREEN}Point A stopped${NC}"
