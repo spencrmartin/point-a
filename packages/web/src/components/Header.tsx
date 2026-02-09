@@ -11,6 +11,7 @@ import {
   LayoutGrid, 
   List, 
   GanttChart,
+  GitBranch,
   Plus,
   Search,
   FileText,
@@ -97,6 +98,12 @@ export function Header() {
               label="Timeline"
               active={viewMode === 'timeline'}
               onClick={() => setViewMode('timeline')}
+            />
+            <ViewButton
+              icon={GitBranch}
+              label="Graph"
+              active={viewMode === 'graph'}
+              onClick={() => setViewMode('graph')}
             />
           </div>
         </div>

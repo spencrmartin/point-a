@@ -78,6 +78,7 @@ echo -e "${GREEN}✓ Dependencies installed${NC}"
 echo ""
 
 # Rebuild native modules to match current Node version
+# (Required for better-sqlite3 used by the API server)
 echo -e "${BLUE}Rebuilding native modules...${NC}"
 pnpm rebuild better-sqlite3 2>/dev/null || true
 echo -e "${GREEN}✓ Native modules rebuilt${NC}"
@@ -159,21 +160,22 @@ if [ -f "$GOOSE_CONFIG" ] && grep -q "^  point-a:" "$GOOSE_CONFIG"; then
 fi
 
 # Add point-a extension to Goose config
+# Note: MCP server connects to Point A API via HTTP (reads port from ~/.point-a/api.port)
+# No environment variables needed - just ensure Point A is running before using Goose
 if [ -f "$GOOSE_CONFIG" ] && grep -q "^extensions:" "$GOOSE_CONFIG"; then
     # Insert point-a after "extensions:" line using a temp file approach
-    awk -v script_dir="$SCRIPT_DIR" -v pointa_dir="$POINTA_DIR" -v node_path="$NODE_PATH" '
+    awk -v script_dir="$SCRIPT_DIR" -v node_path="$NODE_PATH" '
         /^extensions:/ {
             print
             print "  point-a:"
             print "    enabled: true"
             print "    type: stdio"
             print "    name: Point A"
-            print "    description: Local-first issue tracker with AI integration"
+            print "    description: Local-first issue tracker with AI integration (requires Point A API running)"
             print "    cmd: " node_path
             print "    args:"
             print "      - " script_dir "/packages/mcp/dist/index.js"
-            print "    envs:"
-            print "      POINTA_DB_PATH: " pointa_dir "/point-a.db"
+            print "    envs: {}"
             print "    env_keys: []"
             print "    timeout: 300"
             print "    bundled: null"
@@ -192,12 +194,11 @@ extensions:
     enabled: true
     type: stdio
     name: Point A
-    description: Local-first issue tracker with AI integration
+    description: Local-first issue tracker with AI integration (requires Point A API running)
     cmd: $NODE_PATH
     args:
       - $SCRIPT_DIR/packages/mcp/dist/index.js
-    envs:
-      POINTA_DB_PATH: $POINTA_DIR/point-a.db
+    envs: {}
     env_keys: []
     timeout: 300
     bundled: null
@@ -432,8 +433,10 @@ echo "     Production: http://localhost:4173"
 echo "     Development: http://localhost:5173"
 echo ""
 echo -e "  ${YELLOW}4. Use with Goose:${NC}"
-echo "     Restart Goose Desktop to load the Point A extension."
-echo "     Then you can ask Goose to create issues, manage projects, etc."
+echo -e "     ${RED}IMPORTANT: Point A must be running first!${NC}"
+echo "     1. Run ./start.sh (or ./dev.sh)"
+echo "     2. Restart Goose Desktop to load the Point A extension"
+echo "     3. Ask Goose to create issues, manage projects, etc."
 echo ""
 echo -e "  ${YELLOW}5. Stop Point A:${NC}"
 echo "     ./stop.sh"
@@ -448,6 +451,10 @@ echo "  • get_stats"
 echo ""
 echo -e "${BLUE}Data:${NC}"
 echo "  Database: $POINTA_DIR/point-a.db"
+echo "  API Port: $POINTA_DIR/api.port (auto-detected by MCP)"
+echo ""
+echo -e "${YELLOW}Note:${NC} The Goose MCP extension connects to Point A via HTTP API."
+echo "      Make sure Point A is running before using Goose with Point A tools."
 echo ""
 echo -e "${GREEN}Happy issue tracking! 📍✨${NC}"
 echo ""

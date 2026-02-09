@@ -5,6 +5,7 @@ import { Button } from './ui/button'
 import { CreatableCombobox, type ComboboxOption } from './ui/creatable-combobox'
 import { CommentThread } from './CommentThread'
 import { ChecklistSection } from './ChecklistSection'
+import { DependencySection } from './DependencySection'
 import { cn, formatRelativeDate } from '@/lib/utils'
 import { 
   X, 
@@ -377,6 +378,11 @@ export function IssueDetailModal() {
                 {/* Checklist */}
                 <div className="pt-4 border-t">
                   <ChecklistSection issueId={issue.id} />
+                </div>
+
+                {/* Dependencies */}
+                <div className="pt-4 border-t">
+                  <DependencySection issueId={issue.id} />
                 </div>
 
                 {/* Metadata */}

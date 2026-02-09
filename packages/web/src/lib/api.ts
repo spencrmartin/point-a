@@ -5,6 +5,7 @@ import type {
   Label, CreateLabel, UpdateLabel,
   Comment, CreateCommentInput, UpdateCommentInput,
   ChecklistItem, CreateChecklistItem, UpdateChecklistItem,
+  IssueDependencies, CreateDependency, BlockedIssue, ActionableIssue, CriticalPath,
   ApiResponse 
 } from '@point-a/shared'
 
@@ -204,4 +205,45 @@ export const checklistApi = {
       method: 'POST',
       body: JSON.stringify({ itemIds }),
     }),
+}
+
+// Dependencies API
+export const dependenciesApi = {
+  // Get all dependencies for an issue
+  get: (issueId: string) =>
+    fetchApi<ApiResponse<IssueDependencies>>(`/issues/${issueId}/dependencies`),
+  
+  // Add a dependency
+  add: (issueId: string, data: CreateDependency) =>
+    fetchApi<ApiResponse<{ id: string }>>(`/issues/${issueId}/dependencies`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  
+  // Remove a dependency
+  remove: (dependencyId: string) =>
+    fetchApi<{ success: boolean }>(`/dependencies/${dependencyId}`, { method: 'DELETE' }),
+  
+  // Check if an issue is blocked
+  isBlocked: (issueId: string) =>
+    fetchApi<ApiResponse<{ isBlocked: boolean }>>(`/issues/${issueId}/is-blocked`),
+  
+  // Get all blocked issues
+  getBlocked: (projectId?: string) => {
+    const qs = projectId ? `?projectId=${projectId}` : ''
+    return fetchApi<ApiResponse<BlockedIssue[]>>(`/issues/blocked${qs}`)
+  },
+  
+  // Get actionable (unblocked) issues
+  getActionable: (projectId?: string, status?: string) => {
+    const params = new URLSearchParams()
+    if (projectId) params.set('projectId', projectId)
+    if (status) params.set('status', status)
+    const qs = params.toString()
+    return fetchApi<ApiResponse<ActionableIssue[]>>(`/issues/actionable${qs ? `?${qs}` : ''}`)
+  },
+  
+  // Get critical path for a project
+  getCriticalPath: (projectId: string) =>
+    fetchApi<ApiResponse<CriticalPath>>(`/projects/${projectId}/critical-path`),
 }

@@ -7,6 +7,7 @@ import { ProjectHomeView } from './components/ProjectHomeView'
 import { BoardView } from './components/BoardView'
 import { ListView } from './components/ListView'
 import { TimelineView } from './components/TimelineView'
+import { DependencyGraphView } from './components/DependencyGraphView'
 import { InboxView } from './components/InboxView'
 import { MyIssuesView } from './components/MyIssuesView'
 import { QuickCreateModal } from './components/QuickCreateModal'
@@ -133,6 +134,7 @@ function AppContent() {
             {viewMode === 'board' && <div className="p-4 h-full"><BoardView /></div>}
             {viewMode === 'list' && <div className="p-4 h-full"><ListView /></div>}
             {viewMode === 'timeline' && <div className="p-4 h-full"><TimelineView /></div>}
+            {viewMode === 'graph' && <div className="h-full"><DependencyGraphView /></div>}
             {viewMode === 'inbox' && <InboxView />}
             {viewMode === 'my-issues' && <MyIssuesView />}
           </main>

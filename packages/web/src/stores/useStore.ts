@@ -35,8 +35,8 @@ interface AppState {
   toggleSidebar: () => void
   
   // View preferences
-  viewMode: 'home' | 'project-home' | 'board' | 'list' | 'timeline' | 'inbox' | 'my-issues'
-  setViewMode: (mode: 'home' | 'project-home' | 'board' | 'list' | 'timeline' | 'inbox' | 'my-issues') => void
+  viewMode: 'home' | 'project-home' | 'board' | 'list' | 'timeline' | 'inbox' | 'my-issues' | 'graph'
+  setViewMode: (mode: 'home' | 'project-home' | 'board' | 'list' | 'timeline' | 'inbox' | 'my-issues' | 'graph') => void
   
   // Sub-view for inbox/my-issues (which layout to use within those sections)
   subViewMode: 'board' | 'list' | 'timeline'
