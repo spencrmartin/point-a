@@ -24,7 +24,7 @@ import type { IssueWithRelations } from '@point-a/shared'
 export function HomeView() {
   const { data: issuesData, isLoading } = useIssues({})
   const { data: projectsData } = useProjects()
-  const { setActiveIssueId, setCurrentProjectId, setViewMode, setQuickCreateOpen } = useStore()
+  const { setActiveIssueId, setCurrentProjectId, setViewMode } = useStore()
   const { getDisplayName } = useUserStore()
 
   const issues = issuesData?.data || []
@@ -132,20 +132,14 @@ export function HomeView() {
   return (
     <div className="p-6 space-y-8 max-w-6xl mx-auto">
       {/* Welcome Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold flex items-center gap-2">
-            <span className="text-3xl">👋</span>
-            {greeting}, {userName !== 'Anonymous' ? userName : 'there'}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Here's what's happening across your projects
-          </p>
-        </div>
-        <Button onClick={() => setQuickCreateOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Issue
-        </Button>
+      <div>
+        <h1 className="text-2xl font-semibold flex items-center gap-2">
+          <span className="text-3xl">👋</span>
+          {greeting}, {userName !== 'Anonymous' ? userName : 'there'}
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          Here's what's happening across your projects
+        </p>
       </div>
 
       {/* Stats Cards */}

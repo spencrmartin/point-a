@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   ReactFlow,
   Node,
@@ -15,6 +15,7 @@ import {
 import '@xyflow/react/dist/style.css'
 import { useStore } from '@/stores/useStore'
 import { useIssues } from '@/hooks/useIssues'
+import { useProjects } from '@/hooks/useProjects'
 import { useCriticalPath } from '@/hooks/useDependencies'
 import { dependenciesApi } from '@/lib/api'
 import { Button } from './ui/button'
@@ -27,6 +28,7 @@ import {
   Route,
   Filter,
   X,
+  Layers,
 } from 'lucide-react'
 import type { IssueWithRelations } from '@point-a/shared'
 
@@ -63,7 +65,8 @@ function IssueNode({ data }: { data: any }) {
       )}
       style={{
         backgroundColor: colors.bg,
-        borderColor: colors.border,
+        borderColor: data.projectColor || colors.border,
+        borderLeftWidth: data.projectColor ? '4px' : '2px',
       }}
       onClick={() => setActiveIssueId(data.id)}
     >
@@ -75,6 +78,15 @@ function IssueNode({ data }: { data: any }) {
           style={{ backgroundColor: priorityColor }}
         />
         <span className="text-xs font-mono opacity-70">{data.identifier}</span>
+        {data.projectName && (
+          <span 
+            className="text-xs px-1 rounded opacity-60"
+            style={{ backgroundColor: data.projectColor + '30' }}
+            title={data.projectName}
+          >
+            {data.projectIcon}
+          </span>
+        )}
       </div>
       
       <p
@@ -114,18 +126,33 @@ export function DependencyGraphView({ projectId }: DependencyGraphViewProps) {
   const { currentProjectId, setActiveIssueId } = useStore()
   const effectiveProjectId = projectId || currentProjectId
   
+  // When no project is selected (home view), fetch all issues
+  const isAllProjectsView = !effectiveProjectId
+  
   const { data: issuesData, isLoading: issuesLoading } = useIssues(
     effectiveProjectId ? { projectId: effectiveProjectId } : {}
   )
+  const { data: projectsData, isLoading: projectsLoading } = useProjects()
   const { data: criticalPathData } = useCriticalPath(effectiveProjectId)
   
   const [showCriticalPath, setShowCriticalPath] = useState(false)
   const [hideCompleted, setHideCompleted] = useState(false)
+  const [groupByProject, setGroupByProject] = useState(isAllProjectsView)
   const [dependencyData, setDependencyData] = useState<Map<string, any>>(new Map())
   const [isLoadingDeps, setIsLoadingDeps] = useState(false)
 
   const issues = issuesData?.data || []
+  const projects = projectsData?.data || []
   const criticalPath = criticalPathData?.data?.path || []
+  
+  // Create a map of project info for quick lookup
+  const projectMap = useMemo(() => {
+    const map = new Map<string, { name: string; color: string; icon: string }>()
+    projects.forEach(p => {
+      map.set(p.id, { name: p.name, color: p.color, icon: p.icon })
+    })
+    return map
+  }, [projects])
 
   // Load dependencies for all issues
   const loadDependencies = useCallback(async () => {
@@ -152,11 +179,11 @@ export function DependencyGraphView({ projectId }: DependencyGraphViewProps) {
   }, [issues])
 
   // Load dependencies when issues change
-  useMemo(() => {
+  useEffect(() => {
     if (issues.length > 0 && dependencyData.size === 0) {
       loadDependencies()
     }
-  }, [issues.length])
+  }, [issues.length, dependencyData.size, loadDependencies])
 
   // Build nodes and edges from issues and dependencies
   const { nodes, edges } = useMemo(() => {
@@ -244,45 +271,123 @@ export function DependencyGraphView({ projectId }: DependencyGraphViewProps) {
       }
     })
 
-    // Group by level for positioning
-    const levelGroups = new Map<number, IssueWithRelations[]>()
-    filteredIssues.forEach(issue => {
-      const level = levels.get(issue.id) || 0
-      const group = levelGroups.get(level) || []
-      group.push(issue)
-      levelGroups.set(level, group)
-    })
-
-    // Create nodes with positions
+    // Node spacing
     const nodeSpacingX = 250
     const nodeSpacingY = 150
 
-    levelGroups.forEach((levelIssues, level) => {
-      const levelWidth = levelIssues.length * nodeSpacingX
-      const startX = -levelWidth / 2 + nodeSpacingX / 2
+    // Group by level, and optionally by project within each level
+    if (groupByProject && isAllProjectsView) {
+      // Group by project first, then by level within each project
+      const projectGroups = new Map<string, IssueWithRelations[]>()
+      filteredIssues.forEach(issue => {
+        const group = projectGroups.get(issue.projectId) || []
+        group.push(issue)
+        projectGroups.set(issue.projectId, group)
+      })
 
-      levelIssues.forEach((issue, index) => {
-        const isOnCriticalPath = criticalPathSet.has(issue.identifier)
+      // Position each project's issues in a column
+      let projectOffsetX = 0
+      const projectIds = Array.from(projectGroups.keys())
+      
+      projectIds.forEach((projectId, projectIndex) => {
+        const projectIssues = projectGroups.get(projectId) || []
+        const projectInfo = projectMap.get(projectId)
         
-        nodeList.push({
-          id: issue.id,
-          type: 'issue',
-          position: {
-            x: startX + index * nodeSpacingX,
-            y: level * nodeSpacingY,
-          },
-          data: {
+        // Group by level within this project
+        const levelGroups = new Map<number, IssueWithRelations[]>()
+        projectIssues.forEach(issue => {
+          const level = levels.get(issue.id) || 0
+          const group = levelGroups.get(level) || []
+          group.push(issue)
+          levelGroups.set(level, group)
+        })
+
+        // Find max width needed for this project
+        let maxLevelWidth = 0
+        levelGroups.forEach(levelIssues => {
+          maxLevelWidth = Math.max(maxLevelWidth, levelIssues.length)
+        })
+
+        const projectWidth = maxLevelWidth * nodeSpacingX
+        const projectCenterX = projectOffsetX + projectWidth / 2
+
+        // Create nodes for this project
+        levelGroups.forEach((levelIssues, level) => {
+          const levelWidth = levelIssues.length * nodeSpacingX
+          const startX = projectCenterX - levelWidth / 2 + nodeSpacingX / 2
+
+          levelIssues.forEach((issue, index) => {
+            const isOnCriticalPath = criticalPathSet.has(issue.identifier)
+            
+            nodeList.push({
+              id: issue.id,
+              type: 'issue',
+              position: {
+                x: startX + index * nodeSpacingX,
+                y: level * nodeSpacingY,
+              },
+              data: {
+                id: issue.id,
+                identifier: issue.identifier,
+                title: issue.title,
+                status: issue.status,
+                priority: issue.priority,
+                isOnCriticalPath: showCriticalPath && isOnCriticalPath,
+                isBlocked: blockedIssues.has(issue.id),
+                projectId: issue.projectId,
+                projectName: projectInfo?.name,
+                projectColor: projectInfo?.color,
+                projectIcon: projectInfo?.icon,
+              },
+            })
+          })
+        })
+
+        // Move to next project column with gap
+        projectOffsetX += projectWidth + nodeSpacingX
+      })
+    } else {
+      // Standard layout: group by level only
+      const levelGroups = new Map<number, IssueWithRelations[]>()
+      filteredIssues.forEach(issue => {
+        const level = levels.get(issue.id) || 0
+        const group = levelGroups.get(level) || []
+        group.push(issue)
+        levelGroups.set(level, group)
+      })
+
+      levelGroups.forEach((levelIssues, level) => {
+        const levelWidth = levelIssues.length * nodeSpacingX
+        const startX = -levelWidth / 2 + nodeSpacingX / 2
+
+        levelIssues.forEach((issue, index) => {
+          const isOnCriticalPath = criticalPathSet.has(issue.identifier)
+          const projectInfo = projectMap.get(issue.projectId)
+          
+          nodeList.push({
             id: issue.id,
-            identifier: issue.identifier,
-            title: issue.title,
-            status: issue.status,
-            priority: issue.priority,
-            isOnCriticalPath: showCriticalPath && isOnCriticalPath,
-            isBlocked: blockedIssues.has(issue.id),
-          },
+            type: 'issue',
+            position: {
+              x: startX + index * nodeSpacingX,
+              y: level * nodeSpacingY,
+            },
+            data: {
+              id: issue.id,
+              identifier: issue.identifier,
+              title: issue.title,
+              status: issue.status,
+              priority: issue.priority,
+              isOnCriticalPath: showCriticalPath && isOnCriticalPath,
+              isBlocked: blockedIssues.has(issue.id),
+              projectId: issue.projectId,
+              projectName: isAllProjectsView ? projectInfo?.name : undefined,
+              projectColor: isAllProjectsView ? projectInfo?.color : undefined,
+              projectIcon: isAllProjectsView ? projectInfo?.icon : undefined,
+            },
+          })
         })
       })
-    })
+    }
 
     // Create edges from dependencies
     filteredIssues.forEach(issue => {
@@ -295,6 +400,9 @@ export function DependencyGraphView({ projectId }: DependencyGraphViewProps) {
           const isOnCriticalPath = showCriticalPath && 
             criticalPathSet.has(issue.identifier) && 
             criticalPathSet.has(dep.issue.identifier)
+          
+          // Check if cross-project dependency
+          const isCrossProject = issue.projectId !== dep.issue.projectId
 
           edgeList.push({
             id: `${issue.id}-blocks-${dep.issue.id}`,
@@ -303,15 +411,15 @@ export function DependencyGraphView({ projectId }: DependencyGraphViewProps) {
             type: 'smoothstep',
             animated: isOnCriticalPath,
             style: {
-              stroke: isOnCriticalPath ? '#ef4444' : '#94a3b8',
-              strokeWidth: isOnCriticalPath ? 3 : 2,
+              stroke: isOnCriticalPath ? '#ef4444' : isCrossProject ? '#f59e0b' : '#94a3b8',
+              strokeWidth: isOnCriticalPath ? 3 : isCrossProject ? 2 : 2,
             },
             markerEnd: {
               type: MarkerType.ArrowClosed,
-              color: isOnCriticalPath ? '#ef4444' : '#94a3b8',
+              color: isOnCriticalPath ? '#ef4444' : isCrossProject ? '#f59e0b' : '#94a3b8',
             },
-            label: 'blocks',
-            labelStyle: { fontSize: 10, fill: '#64748b' },
+            label: isCrossProject ? 'blocks (cross-project)' : 'blocks',
+            labelStyle: { fontSize: 10, fill: isCrossProject ? '#f59e0b' : '#64748b' },
             labelBgStyle: { fill: 'white', fillOpacity: 0.8 },
           })
         }
@@ -322,18 +430,20 @@ export function DependencyGraphView({ projectId }: DependencyGraphViewProps) {
         // Only add edge if this issue's ID is less than the related issue's ID
         // This prevents duplicate edges
         if (issue.id < dep.issue.id && filteredIssues.some(i => i.id === dep.issue.id)) {
+          const isCrossProject = issue.projectId !== dep.issue.projectId
+          
           edgeList.push({
             id: `${issue.id}-relates-${dep.issue.id}`,
             source: issue.id,
             target: dep.issue.id,
             type: 'smoothstep',
             style: {
-              stroke: '#3b82f6',
+              stroke: isCrossProject ? '#8b5cf6' : '#3b82f6',
               strokeWidth: 1,
               strokeDasharray: '5,5',
             },
-            label: 'relates',
-            labelStyle: { fontSize: 10, fill: '#3b82f6' },
+            label: isCrossProject ? 'relates (cross-project)' : 'relates',
+            labelStyle: { fontSize: 10, fill: isCrossProject ? '#8b5cf6' : '#3b82f6' },
             labelBgStyle: { fill: 'white', fillOpacity: 0.8 },
           })
         }
@@ -341,18 +451,18 @@ export function DependencyGraphView({ projectId }: DependencyGraphViewProps) {
     })
 
     return { nodes: nodeList, edges: edgeList }
-  }, [issues, dependencyData, criticalPath, showCriticalPath, hideCompleted])
+  }, [issues, dependencyData, criticalPath, showCriticalPath, hideCompleted, groupByProject, isAllProjectsView, projectMap])
 
   const [nodesState, setNodes, onNodesChange] = useNodesState(nodes)
   const [edgesState, setEdges, onEdgesChange] = useEdgesState(edges)
 
   // Update nodes/edges when data changes
-  useMemo(() => {
+  useEffect(() => {
     setNodes(nodes)
     setEdges(edges)
   }, [nodes, edges, setNodes, setEdges])
 
-  if (issuesLoading || isLoadingDeps) {
+  if (issuesLoading || isLoadingDeps || projectsLoading) {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -401,10 +511,21 @@ export function DependencyGraphView({ projectId }: DependencyGraphViewProps) {
           <Filter className="h-4 w-4" />
           Hide Completed
         </Button>
+        {isAllProjectsView && (
+          <Button
+            variant={groupByProject ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setGroupByProject(!groupByProject)}
+            className="gap-2"
+          >
+            <Layers className="h-4 w-4" />
+            Group by Project
+          </Button>
+        )}
       </div>
 
       {/* Legend */}
-      <div className="absolute top-4 right-4 z-10 bg-card/90 backdrop-blur-sm rounded-lg border p-3 text-xs space-y-2">
+      <div className="absolute top-4 right-4 z-10 bg-card/90 backdrop-blur-sm rounded-lg border p-3 text-xs space-y-2 max-h-[80vh] overflow-y-auto">
         <p className="font-medium">Legend</p>
         <div className="space-y-1">
           <div className="flex items-center gap-2">
@@ -415,6 +536,18 @@ export function DependencyGraphView({ projectId }: DependencyGraphViewProps) {
             <div className="w-3 h-0.5 bg-blue-500 border-dashed border-t" />
             <span>Relates</span>
           </div>
+          {isAllProjectsView && (
+            <>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-0.5 bg-amber-500" />
+                <span>Cross-project blocks</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-0.5 bg-violet-500 border-dashed border-t" />
+                <span>Cross-project relates</span>
+              </div>
+            </>
+          )}
           {showCriticalPath && (
             <div className="flex items-center gap-2">
               <div className="w-3 h-0.5 bg-red-500" />
@@ -423,6 +556,7 @@ export function DependencyGraphView({ projectId }: DependencyGraphViewProps) {
           )}
         </div>
         <div className="pt-2 border-t space-y-1">
+          <p className="font-medium text-muted-foreground">Status</p>
           {Object.entries(statusColors).map(([status, colors]) => (
             <div key={status} className="flex items-center gap-2">
               <div
@@ -433,6 +567,20 @@ export function DependencyGraphView({ projectId }: DependencyGraphViewProps) {
             </div>
           ))}
         </div>
+        {isAllProjectsView && projects.length > 0 && (
+          <div className="pt-2 border-t space-y-1">
+            <p className="font-medium text-muted-foreground">Projects</p>
+            {projects.map(project => (
+              <div key={project.id} className="flex items-center gap-2">
+                <div
+                  className="w-3 h-3 rounded"
+                  style={{ backgroundColor: project.color }}
+                />
+                <span>{project.icon} {project.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Graph */}

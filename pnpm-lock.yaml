@@ -66,22 +66,10 @@ importers:
       '@point-a/shared':
         specifier: workspace:*
         version: link:../shared
-      better-sqlite3:
-        specifier: ^11.7.0
-        version: 11.10.0
-      drizzle-orm:
-        specifier: ^0.38.0
-        version: 0.38.4(@types/better-sqlite3@7.6.13)(@types/react@18.3.27)(better-sqlite3@11.10.0)(react@18.3.1)
-      nanoid:
-        specifier: ^5.0.9
-        version: 5.1.6
       zod:
         specifier: ^3.24.0
         version: 3.25.76
     devDependencies:
-      '@types/better-sqlite3':
-        specifier: ^7.6.12
-        version: 7.6.13
       '@types/node':
         specifier: ^22.10.0
         version: 22.19.7

@@ -13,17 +13,12 @@ import {
   ListToolsRequestSchema,
   ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js'
-import { createDb } from './db.js'
-import { Repository } from './repository.js'
+import { apiClient } from './api-client.js'
 import { readFileSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-
-// Initialize database and repository
-const db = createDb()
-const repo = new Repository(db)
 
 // MCP App constants
 const MCP_APP_ISSUE_URI = 'ui://point-a/issue'
@@ -88,7 +83,7 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
   const uri = request.params.uri
 
   if (uri === 'point-a://stats') {
-    const stats = await repo.getStats()
+    const stats = await apiClient.getStats()
     return {
       contents: [
         {
@@ -101,7 +96,7 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
   }
 
   if (uri === 'point-a://projects') {
-    const projects = await repo.listProjects()
+    const projects = await apiClient.listProjects()
     return {
       contents: [
         {
@@ -114,7 +109,7 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
   }
 
   if (uri === 'point-a://issues/recent') {
-    const issues = await repo.listIssues({ limit: 10 })
+    const issues = await apiClient.listIssues({ limit: 10 })
     return {
       contents: [
         {
@@ -499,7 +494,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   try {
     switch (name) {
       case 'list_projects': {
-        const projects = await repo.listProjects()
+        const projects = await apiClient.listProjects()
         return {
           content: [
             {
@@ -514,7 +509,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const { key, name: projectName, description, color, icon } = args as any
         
         // Check if key exists
-        const existing = await repo.getProjectByKey(key)
+        const existing = await apiClient.getProjectByKey(key)
         if (existing) {
           return {
             content: [{ type: 'text', text: JSON.stringify({ error: `Project key "${key}" already exists` }) }],
@@ -522,7 +517,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           }
         }
 
-        const project = await repo.createProject({ key, name: projectName, description, color, icon })
+        const project = await apiClient.createProject({ key, name: projectName, description, color, icon })
         return {
           content: [
             {
@@ -535,7 +530,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'search_issues': {
         const { query, projectId, status, priority, assignee, limit } = args as any
-        const issues = await repo.listIssues({
+        const issues = await apiClient.listIssues({
           search: query,
           projectId,
           status,
@@ -556,14 +551,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'get_issue': {
         const { id } = args as any
         
-        // Try by ID first, then by identifier
-        let issue = await repo.getIssueWithLabels(id)
-        if (!issue && id.includes('-')) {
-          const byIdentifier = await repo.getIssueByIdentifier(id)
-          if (byIdentifier) {
-            issue = await repo.getIssueWithLabels(byIdentifier.id)
-          }
-        }
+        // API handles both ID and identifier
+        const issue = await apiClient.getIssue(id)
 
         if (!issue) {
           return {
@@ -573,7 +562,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
 
         // Get project info for the structured content
-        const project = await repo.getProject(issue.projectId)
+        const project = await apiClient.getProject(issue.projectId)
 
         return {
           content: [
@@ -604,7 +593,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const { title, description, projectId, status, priority, type, assignee, dueDate } = args as any
         
         // Verify project exists
-        const project = await repo.getProject(projectId)
+        const project = await apiClient.getProject(projectId)
         if (!project) {
           return {
             content: [{ type: 'text', text: JSON.stringify({ error: `Project "${projectId}" not found` }) }],
@@ -612,7 +601,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           }
         }
 
-        const issue = await repo.createIssue({
+        const issue = await apiClient.createIssue({
           title,
           description,
           projectId,
@@ -651,7 +640,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'update_issue': {
         const { id, ...updates } = args as any
         
-        const existing = await repo.getIssue(id)
+        const existing = await apiClient.getIssue(id)
         if (!existing) {
           return {
             content: [{ type: 'text', text: JSON.stringify({ error: `Issue "${id}" not found` }) }],
@@ -659,11 +648,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           }
         }
 
-        const issue = await repo.updateIssue(id, updates)
-        
-        // Get full issue with labels and project info
-        const fullIssue = await repo.getIssueWithLabels(id)
-        const project = await repo.getProject(issue.projectId)
+        const issue = await apiClient.updateIssue(id, updates)
+        const project = await apiClient.getProject(issue.projectId)
 
         return {
           content: [
@@ -684,7 +670,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             dueDate: issue.dueDate,
             createdAt: issue.createdAt,
             updatedAt: issue.updatedAt,
-            labels: fullIssue?.labels || [],
+            labels: issue.labels || [],
             project: project ? { key: project.key, name: project.name } : null,
           },
         }
@@ -693,7 +679,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'delete_issue': {
         const { id } = args as any
         
-        const existing = await repo.getIssue(id)
+        const existing = await apiClient.getIssue(id)
         if (!existing) {
           return {
             content: [{ type: 'text', text: JSON.stringify({ error: `Issue "${id}" not found` }) }],
@@ -701,7 +687,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           }
         }
 
-        await repo.deleteIssue(id)
+        await apiClient.deleteIssue(id)
         return {
           content: [
             {
@@ -714,7 +700,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'bulk_update_issues': {
         const { ids, status, priority, assignee } = args as any
-        const result = await repo.bulkUpdateIssues(ids, { status, priority, assignee })
+        const result = await apiClient.bulkUpdateIssues(ids, { status, priority, assignee })
         return {
           content: [
             {
@@ -727,7 +713,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'triage_issues': {
         const { projectId, limit } = args as any
-        const issues = await repo.listIssues({
+        const issues = await apiClient.listIssues({
           projectId,
           status: 'backlog',
           priority: 'none',
@@ -749,7 +735,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'list_labels': {
         const { projectId } = args as any
-        const labels = await repo.listLabels(projectId)
+        const labels = await apiClient.listLabels(projectId)
         return {
           content: [
             {
@@ -762,7 +748,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'create_label': {
         const { name: labelName, color, projectId } = args as any
-        const label = await repo.createLabel({ name: labelName, color, projectId })
+        const label = await apiClient.createLabel({ name: labelName, color, projectId })
         return {
           content: [
             {
@@ -775,7 +761,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'list_cycles': {
         const { projectId } = args as any
-        const cycles = await repo.listCycles(projectId)
+        const cycles = await apiClient.listCycles(projectId)
         return {
           content: [
             {
@@ -789,7 +775,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'create_cycle': {
         const { name: cycleName, projectId, startDate, endDate } = args as any
         
-        const project = await repo.getProject(projectId)
+        const project = await apiClient.getProject(projectId)
         if (!project) {
           return {
             content: [{ type: 'text', text: JSON.stringify({ error: `Project "${projectId}" not found` }) }],
@@ -797,7 +783,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           }
         }
 
-        const cycle = await repo.createCycle({ name: cycleName, projectId, startDate, endDate })
+        const cycle = await apiClient.createCycle({ name: cycleName, projectId, startDate, endDate })
         return {
           content: [
             {
@@ -809,7 +795,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case 'get_stats': {
-        const stats = await repo.getStats()
+        const stats = await apiClient.getStats()
         return {
           content: [
             {

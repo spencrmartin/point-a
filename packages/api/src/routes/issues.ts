@@ -2,9 +2,34 @@ import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
 import { createIssueSchema, updateIssueSchema, issueListQuerySchema } from '@point-a/shared'
 import { issueService, projectService } from '../services/index.js'
+import { dependencyService } from '../services/dependency.service.js'
 import { z } from 'zod'
 
 const app = new Hono()
+
+// Dependency routes - must be before /:id to avoid conflicts
+// GET /issues/blocked - Get all blocked issues
+app.get('/blocked', async (c) => {
+  try {
+    const projectId = c.req.query('projectId')
+    const blockedIssues = await dependencyService.getBlockedIssues(projectId)
+    return c.json({ data: blockedIssues })
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500)
+  }
+})
+
+// GET /issues/actionable - Get actionable (unblocked) issues
+app.get('/actionable', async (c) => {
+  try {
+    const projectId = c.req.query('projectId')
+    const status = c.req.query('status')
+    const actionableIssues = await dependencyService.getActionableIssues(projectId, status)
+    return c.json({ data: actionableIssues })
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500)
+  }
+})
 
 // GET /issues - List issues with filters
 app.get('/', zValidator('query', issueListQuerySchema), async (c) => {
@@ -19,6 +44,53 @@ app.get('/', zValidator('query', issueListQuerySchema), async (c) => {
       offset: query.offset,
     }
   })
+})
+
+// GET /issues/:id/dependencies - Get dependencies for an issue
+app.get('/:id/dependencies', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const dependencies = await dependencyService.getDependencies(id)
+    return c.json({ data: dependencies })
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500)
+  }
+})
+
+// POST /issues/:id/dependencies - Add a dependency
+app.post('/:id/dependencies', async (c) => {
+  try {
+    const sourceIssueId = c.req.param('id')
+    const body = await c.req.json()
+    const { targetIssueId, dependencyType } = body
+
+    if (!targetIssueId || !dependencyType) {
+      return c.json({ error: 'targetIssueId and dependencyType are required' }, 400)
+    }
+
+    if (!['blocks', 'relates', 'duplicates'].includes(dependencyType)) {
+      return c.json({ error: 'Invalid dependencyType. Must be: blocks, relates, or duplicates' }, 400)
+    }
+
+    const result = await dependencyService.addDependency(sourceIssueId, targetIssueId, dependencyType)
+    return c.json({ data: result }, 201)
+  } catch (error: any) {
+    if (error.message.includes('circular') || error.message.includes('already exists') || error.message.includes('self')) {
+      return c.json({ error: error.message }, 400)
+    }
+    return c.json({ error: error.message }, 500)
+  }
+})
+
+// GET /issues/:id/is-blocked - Check if an issue is blocked
+app.get('/:id/is-blocked', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const isBlocked = await dependencyService.isBlocked(id)
+    return c.json({ data: { isBlocked } })
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500)
+  }
 })
 
 // GET /issues/:id - Get issue by ID or identifier

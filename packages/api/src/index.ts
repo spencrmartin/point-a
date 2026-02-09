@@ -2,6 +2,10 @@ import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
+import { createServer } from 'net'
+import { writeFileSync } from 'fs'
+import { join } from 'path'
+import { homedir } from 'os'
 import { projects, issues, cycles, labels } from './routes/index.js'
 import { commentRoutes } from './routes/comment.routes.js'
 import { checklistRoutes } from './routes/checklist.routes.js'
@@ -34,9 +38,40 @@ app.onError((err, c) => {
   return c.json({ error: 'Internal Server Error', message: err.message }, 500)
 })
 
-const port = parseInt(process.env.PORT || '3001')
+// Find an available port
+async function findAvailablePort(startPort: number): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const server = createServer()
+    server.listen(startPort, () => {
+      const address = server.address()
+      const port = typeof address === 'object' && address ? address.port : startPort
+      server.close(() => resolve(port))
+    })
+    server.on('error', (err: NodeJS.ErrnoException) => {
+      if (err.code === 'EADDRINUSE') {
+        // Port in use, try next one
+        resolve(findAvailablePort(startPort + 1))
+      } else {
+        reject(err)
+      }
+    })
+  })
+}
 
-console.log(`
+// Write port to file so other processes can discover it
+function writePortFile(port: number) {
+  const portFilePath = join(homedir(), '.point-a', 'api.port')
+  writeFileSync(portFilePath, String(port))
+}
+
+async function start() {
+  const preferredPort = parseInt(process.env.PORT || '3001')
+  const port = await findAvailablePort(preferredPort)
+  
+  // Write port file for discovery
+  writePortFile(port)
+
+  console.log(`
   ____       _       _        _    
  |  _ \\ ___ (_)_ __ | |_     / \\   
  | |_) / _ \\| | '_ \\| __|   / _ \\  
@@ -47,9 +82,12 @@ console.log(`
   📚 API docs at http://localhost:${port}/api
 `)
 
-serve({
-  fetch: app.fetch,
-  port,
-})
+  serve({
+    fetch: app.fetch,
+    port,
+  })
+}
+
+start().catch(console.error)
 
 export default app
