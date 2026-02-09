@@ -13,6 +13,7 @@ import {
   GanttChart,
   Plus,
   Search,
+  FileText,
 } from 'lucide-react'
 
 export function Header() {
@@ -25,13 +26,27 @@ export function Header() {
   const { data: projectsData } = useProjects()
   
   const currentProject = projectsData?.data?.find(p => p.id === currentProjectId)
-  const isHome = viewMode === 'home'
+  
+  // Determine if we're in a project context (project selected and not on global home)
+  const isInProjectContext = currentProjectId && viewMode !== 'home'
+  
+  // Home button behavior: if in project context, go to project-home; otherwise go to global home
+  const handleHomeClick = () => {
+    if (isInProjectContext) {
+      setViewMode('project-home')
+    } else {
+      setViewMode('home')
+    }
+  }
+  
+  // Check if home is active (either global home when no project, or project-home when in project)
+  const isHomeActive = viewMode === 'home' || viewMode === 'project-home'
 
   return (
     <TooltipProvider delayDuration={0}>
       <header className="h-14 px-4 flex items-center justify-between">
-        {/* Left: Search hint */}
-        <div className="w-32 hidden sm:flex items-center">
+        {/* Left: Search hint + Project indicator */}
+        <div className="w-48 hidden sm:flex items-center gap-2">
           <button
             onClick={() => {
               // Trigger command palette via keyboard event
@@ -45,32 +60,45 @@ export function Header() {
           </button>
         </div>
 
-        {/* Center: View switcher */}
-        <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
-          <ViewButton
-            icon={Home}
-            label="Home"
-            active={viewMode === 'home'}
-            onClick={() => setViewMode('home')}
-          />
-          <ViewButton
-            icon={LayoutGrid}
-            label="Board"
-            active={viewMode === 'board'}
-            onClick={() => setViewMode('board')}
-          />
-          <ViewButton
-            icon={List}
-            label="List"
-            active={viewMode === 'list'}
-            onClick={() => setViewMode('list')}
-          />
-          <ViewButton
-            icon={GanttChart}
-            label="Timeline"
-            active={viewMode === 'timeline'}
-            onClick={() => setViewMode('timeline')}
-          />
+        {/* Center: Project indicator + View switcher */}
+        <div className="flex items-center gap-3">
+          {/* Project indicator */}
+          {isInProjectContext && currentProject && (
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: currentProject.color + '20' }}
+            >
+              <ProjectIcon iconId={currentProject.icon} size={18} color={currentProject.color} />
+            </div>
+          )}
+          
+          {/* View switcher */}
+          <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
+            <ViewButton
+              icon={isInProjectContext ? FileText : Home}
+              label={isInProjectContext ? 'README' : 'Home'}
+              active={isHomeActive}
+              onClick={handleHomeClick}
+            />
+            <ViewButton
+              icon={LayoutGrid}
+              label="Board"
+              active={viewMode === 'board'}
+              onClick={() => setViewMode('board')}
+            />
+            <ViewButton
+              icon={List}
+              label="List"
+              active={viewMode === 'list'}
+              onClick={() => setViewMode('list')}
+            />
+            <ViewButton
+              icon={GanttChart}
+              label="Timeline"
+              active={viewMode === 'timeline'}
+              onClick={() => setViewMode('timeline')}
+            />
+          </div>
         </div>
 
         {/* Right: Create button */}
