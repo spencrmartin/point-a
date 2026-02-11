@@ -22,7 +22,8 @@ import { Button } from './ui/button'
 import type { IssueWithRelations } from '@point-a/shared'
 
 export function HomeView() {
-  const { data: issuesData, isLoading } = useIssues({})
+  // Fetch all issues for accurate stats (default limit is 50)
+  const { data: issuesData, isLoading } = useIssues({ limit: 1000 })
   const { data: projectsData } = useProjects()
   const { setActiveIssueId, setCurrentProjectId, setViewMode, setQuickCreateOpen } = useStore()
   const { getDisplayName } = useUserStore()
